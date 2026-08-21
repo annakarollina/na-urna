@@ -218,15 +218,17 @@ Evitar:
 
 Dependências JavaScript utilizadas no bundle devem ser fixadas por versão e auditadas no pipeline.
 
-## 9. Tecnologias sugeridas
+## 9. Tecnologias da aplicação
 
-A arquitetura não depende de framework. Uma combinação pequena é suficiente:
+A SPA mantém as regras eleitorais e os adaptadores de dados fora da camada de interface. A renderização declarativa usa Preact, escolhido pelo bundle pequeno e pela integração direta com TypeScript e Vite:
 
 - TypeScript;
+- Preact para componentes e estado exclusivamente em memória;
 - Vite;
 - HTML/CSS;
-- biblioteca pequena e bem auditada para renderização/exportação de imagem, se necessária;
-- testes unitários para regras e normalização;
+- Canvas nativo para renderização/exportação de imagem;
+- Vitest para domínio, normalização e componentes;
+- Playwright para fluxos em Chromium e WebKit e regressão visual por plataforma;
 - GitHub Actions para pipeline e deploy;
 - hospedagem estática, como GitHub Pages.
 

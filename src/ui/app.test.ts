@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act } from "preact/test-utils";
 
 import presidentFixture from "../../public/data/development-fixtures/2026/BR/president/candidates.json";
 import federalDeputyFixture from "../../public/data/development-fixtures/2026/SP/federal-deputy/candidates.json";
@@ -7,7 +8,7 @@ import governorFixture from "../../public/data/development-fixtures/2026/SP/gove
 import senatorFixture from "../../public/data/development-fixtures/2026/SP/senator/candidates.json";
 import stateDeputyFixture from "../../public/data/development-fixtures/2026/SP/state-deputy/candidates.json";
 import { CANDIDATE_DATASET_KIND } from "../candidates/index.ts";
-import { mountApplication } from "./app.ts";
+import { mountApplication } from "./App.tsx";
 
 // Esta suíte cobre apenas a fiação UI -> domínio -> DOM. As regras de negócio
 // (senadores, legenda, branco/nulo, busca, etc.) já têm testes unitários próprios.
@@ -86,20 +87,30 @@ function findSlotSection(container: HTMLElement, slotLabel: string): HTMLElement
   return section as HTMLElement;
 }
 
-function selectCandidate(container: HTMLElement, slotId: string, ballotName: string): void {
+async function selectCandidate(
+  container: HTMLElement,
+  slotId: string,
+  ballotName: string,
+): Promise<void> {
   const input = container.querySelector<HTMLInputElement>(`#search-${slotId}`);
   const results = container.querySelector<HTMLElement>(`#results-${slotId}`);
   if (!input || !results) {
     throw new Error(`Busca não encontrada para o slot ${slotId}.`);
   }
-  input.dispatchEvent(new Event("focus"));
-  const card = [...results.querySelectorAll<HTMLButtonElement>(".candidate-card")].find(
-    (button) => button.textContent?.includes(ballotName),
-  );
+  await act(async () => {
+    input.dispatchEvent(new Event("focus"));
+  });
+  let card: HTMLButtonElement | undefined;
+  await vi.waitFor(() => {
+    card = [...results.querySelectorAll<HTMLButtonElement>(".candidate-card")].find(
+      (button) => button.textContent?.includes(ballotName),
+    );
+    if (!card) throw new Error(`Candidato "${ballotName}" ainda não encontrado.`);
+  });
   if (!card) {
     throw new Error(`Candidato "${ballotName}" não encontrado no slot ${slotId}.`);
   }
-  card.click();
+  await act(async () => card?.click());
 }
 
 async function mountSpSession(): Promise<HTMLElement> {
@@ -111,10 +122,15 @@ async function mountSpSession(): Promise<HTMLElement> {
   if (!select) {
     throw new Error("Seletor de UF não encontrado.");
   }
-  select.value = "SP";
-  select
-    .closest("form")
-    ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  await act(async () => {
+    select.value = "SP";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await act(async () => {
+    select
+      .closest("form")
+      ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  });
 
   await vi.waitFor(() => {
     if (!container.querySelector("#search-federal_deputy-1")) {
@@ -148,7 +164,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("integração da UI (app.ts)", () => {
+describe("integração da UI Preact", () => {
   it("painel de candidatos: fechado por padrão, abre ao focar, fecha ao selecionar e reabre fechado após Trocar", async () => {
     const container = await mountSpSession();
     const input = container.querySelector<HTMLInputElement>("#search-federal_deputy-1");
@@ -158,17 +174,21 @@ describe("integração da UI (app.ts)", () => {
     }
 
     expect(results.hidden).toBe(true);
-    input.dispatchEvent(new Event("focus"));
+    await act(async () => {
+      input.dispatchEvent(new Event("focus"));
+    });
     expect(results.hidden).toBe(false);
 
-    selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL A");
+    await selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL A");
 
     expect(container.querySelector("#results-federal_deputy-1")).toBeNull();
     expect(container.querySelector('[data-office="FEDERAL_DEPUTY"] .selected-candidate')).not.toBeNull();
 
-    container
-      .querySelector<HTMLButtonElement>('[data-office="FEDERAL_DEPUTY"] .change-choice')
-      ?.click();
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-office="FEDERAL_DEPUTY"] .change-choice')
+        ?.click(),
+    );
 
     const reopenedResults = container.querySelector<HTMLElement>("#results-federal_deputy-1");
     if (!reopenedResults) {
@@ -176,33 +196,39 @@ describe("integração da UI (app.ts)", () => {
     }
     expect(reopenedResults.hidden).toBe(true);
 
-    container
-      .querySelector<HTMLInputElement>("#search-federal_deputy-1")
-      ?.dispatchEvent(new Event("focus"));
+    await act(async () => {
+      container
+        .querySelector<HTMLInputElement>("#search-federal_deputy-1")
+        ?.dispatchEvent(new Event("focus"));
+    });
     expect(reopenedResults.hidden).toBe(false);
 
-    container
-      .querySelector('[data-office="FEDERAL_DEPUTY"] .candidate-picker')
-      ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await act(async () => {
+      container
+        .querySelector('[data-office="FEDERAL_DEPUTY"] .candidate-picker')
+        ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
     expect(reopenedResults.hidden).toBe(true);
   });
 
   it("trocar candidato: volta direto ao seletor original e preserva as demais escolhas", async () => {
     const container = await mountSpSession();
 
-    selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL A");
-    selectCandidate(container, "governor-1", "EXEMPLO GOVERNO");
+    await selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL A");
+    await selectCandidate(container, "governor-1", "EXEMPLO GOVERNO");
 
-    container
-      .querySelector<HTMLButtonElement>('[data-office="FEDERAL_DEPUTY"] .change-choice')
-      ?.click();
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-office="FEDERAL_DEPUTY"] .change-choice')
+        ?.click(),
+    );
 
     expect(container.querySelector("#search-federal_deputy-1")).not.toBeNull();
     expect(
       container.querySelector('[data-office="GOVERNOR"] .selected-candidate')?.textContent,
     ).toContain("EXEMPLO GOVERNO");
 
-    selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL B");
+    await selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL B");
 
     const selectedCard = container.querySelector('[data-office="FEDERAL_DEPUTY"] .selected-candidate');
     expect(selectedCard?.textContent).toContain("2020");
@@ -215,8 +241,8 @@ describe("integração da UI (app.ts)", () => {
   it("dois senadores: impede repetir o mesmo candidato na segunda escolha", async () => {
     const container = await mountSpSession();
 
-    selectCandidate(container, "senator-1", "EXEMPLO SENADO A");
-    selectCandidate(container, "senator-2", "EXEMPLO SENADO A");
+    await selectCandidate(container, "senator-1", "EXEMPLO SENADO A");
+    await selectCandidate(container, "senator-2", "EXEMPLO SENADO A");
 
     const secondChoice = findSlotSection(container, "Senador — 2ª escolha");
     expect(secondChoice.querySelector(".error-state")?.textContent).toContain(
@@ -232,7 +258,7 @@ describe("integração da UI (app.ts)", () => {
 
   it("alterar UF: exige confirmação destrutiva e só limpa a colinha quando confirmada", async () => {
     const container = await mountSpSession();
-    selectCandidate(container, "governor-1", "EXEMPLO GOVERNO");
+    await selectCandidate(container, "governor-1", "EXEMPLO GOVERNO");
     expect(container.querySelector('[data-office="GOVERNOR"] .selected-candidate')).not.toBeNull();
 
     // happy-dom não implementa window.confirm; um mock explícito é necessário
@@ -240,20 +266,27 @@ describe("integração da UI (app.ts)", () => {
     const confirmMock = vi.fn();
     vi.stubGlobal("confirm", confirmMock);
 
-    function attemptChangeTo(uf: string): void {
-      container.querySelector<HTMLButtonElement>(".location-change")?.click();
+    async function attemptChangeTo(uf: string): Promise<void> {
+      await act(async () =>
+        container.querySelector<HTMLButtonElement>(".location-change")?.click(),
+      );
       const select = container.querySelector<HTMLSelectElement>("#voting-state");
       if (!select) {
         throw new Error("Seletor de UF não encontrado.");
       }
-      select.value = uf;
-      select
-        .closest("form")
-        ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await act(async () => {
+        select.value = uf;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      await act(async () => {
+        select
+          .closest("form")
+          ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      });
     }
 
     confirmMock.mockReturnValueOnce(false);
-    attemptChangeTo("RJ");
+    await attemptChangeTo("RJ");
 
     expect(confirmMock).toHaveBeenCalledWith(
       expect.stringContaining("apagará as escolhas atuais"),
@@ -261,7 +294,7 @@ describe("integração da UI (app.ts)", () => {
     expect(container.querySelector('[data-office="GOVERNOR"] .selected-candidate')).not.toBeNull();
 
     confirmMock.mockReturnValueOnce(true);
-    attemptChangeTo("RJ");
+    await attemptChangeTo("RJ");
 
     await vi.waitFor(() => {
       if (!container.querySelector(".location-summary-value")?.textContent?.includes("RJ")) {
@@ -286,30 +319,43 @@ describe("integração da UI (app.ts)", () => {
 
     container.querySelector<HTMLButtonElement>("#about-button")?.click();
 
+    await vi.waitFor(() => {
+      expect(
+        container.querySelector<HTMLDialogElement>(".about-dialog")?.open,
+      ).toBe(true);
+    });
     const firstOpenDialog = container.querySelector<HTMLDialogElement>(".about-dialog");
-    expect(firstOpenDialog?.open).toBe(true);
     firstOpenDialog?.querySelector<HTMLButtonElement>(".dialog-close")?.click();
 
-    expect(firstOpenDialog?.open).toBe(false);
+    await vi.waitFor(() => expect(firstOpenDialog?.open).toBe(false));
     expectNoImperativeScrollLock();
 
     container.querySelector<HTMLButtonElement>("#about-button")?.click();
 
+    await vi.waitFor(() => {
+      expect(
+        container.querySelector<HTMLDialogElement>(".about-dialog")?.open,
+      ).toBe(true);
+    });
     const secondOpenDialog = container.querySelector<HTMLDialogElement>(".about-dialog");
-    expect(secondOpenDialog?.open).toBe(true);
     secondOpenDialog?.querySelector<HTMLButtonElement>(".dialog-close")?.click();
 
-    expect(secondOpenDialog?.open).toBe(false);
+    await vi.waitFor(() => expect(secondOpenDialog?.open).toBe(false));
     expectNoImperativeScrollLock();
 
     const select = container.querySelector<HTMLSelectElement>("#voting-state");
     if (!select) {
       throw new Error("Seletor de UF não encontrado.");
     }
-    select.value = "SP";
-    select
-      .closest("form")
-      ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await act(async () => {
+      select.value = "SP";
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await act(async () => {
+      select
+        .closest("form")
+        ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
 
     await vi.waitFor(() => {
       const renderedDialog = container.querySelector<HTMLDialogElement>(".about-dialog");
@@ -327,7 +373,7 @@ describe("integração da UI (app.ts)", () => {
     }
     expect(generateButton.disabled).toBe(true);
 
-    selectCandidate(container, "governor-1", "EXEMPLO GOVERNO");
+    await selectCandidate(container, "governor-1", "EXEMPLO GOVERNO");
 
     expect(
       container.querySelector<HTMLButtonElement>(".generate-button")?.disabled,

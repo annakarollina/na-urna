@@ -1,6 +1,6 @@
 import "./style.css";
 import { CANDIDATE_DATASET_KIND } from "./candidates/index.ts";
-import { mountApplication } from "./ui/app.ts";
+import { mountApplication } from "./ui/App.tsx";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 

@@ -128,7 +128,7 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
   ).toBeEnabled();
 });
 
-test("baseline visual das telas principais", async ({ page }) => {
+test("baseline visual das telas principais", async ({ page, browserName }) => {
   test.skip(
     process.platform !== "win32",
     "Os goldens visuais da Fase 0 usam Windows como ambiente canônico.",
@@ -143,6 +143,9 @@ test("baseline visual das telas principais", async ({ page }) => {
 
   await selectSaoPaulo(page);
   await prepareVisualSnapshot(page);
+  if (browserName === "webkit") {
+    await page.getByRole("link", { name: "Ir para o conteúdo" }).focus();
+  }
   await expect(page).toHaveScreenshot("voting-flow.png", {
     fullPage: true,
     stylePath: snapshotStylePath,
