@@ -77,9 +77,17 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.about-dialog[open] {
+  animation: surface-rise-in var(--duration-base) var(--ease-standard);
+}
+
 .about-dialog::backdrop {
   background: var(--color-overlay);
   backdrop-filter: blur(0.12rem);
+}
+
+.about-dialog[open]::backdrop {
+  animation: veil-fade-in var(--duration-base) var(--ease-standard);
 }
 
 .about-dialog-content {
@@ -371,6 +379,17 @@ h1 {
   line-height: 1.45;
 }
 
+.location-suggestion,
+.geolocation-error,
+.loading-state,
+.empty-state,
+.error-state,
+.export-generating,
+.export-success,
+.export-hint {
+  animation: content-rise-in var(--duration-fast) var(--ease-standard);
+}
+
 select,
 .candidate-search {
   width: 100%;
@@ -447,6 +466,7 @@ select {
 
 .candidate-picker {
   position: relative;
+  animation: content-rise-in var(--duration-base) var(--ease-standard);
 }
 
 .candidate-picker-trigger {
@@ -505,6 +525,17 @@ select {
   border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+
+.candidate-picker-surface[data-mode="desktop"][data-native-popover="false"]:not(
+    [hidden]
+  ),
+.candidate-picker-surface[data-native-popover="true"]:popover-open {
+  animation: surface-rise-in var(--duration-base) var(--ease-standard);
+}
+
+.candidate-picker-surface[data-mode="mobile"]:not([hidden]) {
+  animation: sheet-rise-in var(--duration-base) var(--ease-standard);
 }
 
 .candidate-picker-header {
@@ -767,6 +798,7 @@ progress::-moz-progress-bar {
   border: 2px solid var(--color-brand-hover);
   border-radius: 0.65rem;
   background: var(--color-surface-muted);
+  animation: content-rise-in var(--duration-base) var(--ease-standard);
 }
 
 .selected-candidate.selected-special-choice {
@@ -1367,6 +1399,52 @@ progress::-moz-progress-bar {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes content-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes surface-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4rem) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sheet-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes veil-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
 

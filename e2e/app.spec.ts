@@ -134,6 +134,17 @@ test("Sobre abre, fecha e não prende o scroll da página", async ({
   const dialog = page.getByRole("dialog", { name: "Sobre a Minha Colinha" });
   await expect(dialog).toBeVisible();
 
+  const motionDurations = await page.evaluate(() => {
+    const about = document.querySelector(".about-dialog");
+    if (!(about instanceof HTMLElement)) return null;
+    return {
+      dialog: getComputedStyle(about).animationDuration,
+      backdrop: getComputedStyle(about, "::backdrop").animationDuration,
+    };
+  });
+  expect(parseFloat(motionDurations?.dialog ?? "1")).toBeLessThan(0.001);
+  expect(parseFloat(motionDurations?.backdrop ?? "1")).toBeLessThan(0.001);
+
   const lockedScroll = await page.evaluate(() => window.scrollY);
   await scrollDown(page, browserName, 500);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(lockedScroll);
@@ -169,6 +180,13 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
     })
     .click();
   await expect(slot.getByText("EXEMPLO FEDERAL A", { exact: true })).toBeVisible();
+  expect(
+    parseFloat(
+      await slot
+        .locator(".selected-candidate")
+        .evaluate((element) => getComputedStyle(element).animationDuration),
+    ),
+  ).toBeLessThan(0.001);
 
   await slot.getByRole("button", { name: "Trocar" }).click();
   await expect(
