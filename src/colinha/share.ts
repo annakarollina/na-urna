@@ -10,9 +10,16 @@ export type ColinhaShareResult =
   | Readonly<{ status: "unsupported" }>;
 
 function browserShareEnvironment(): ColinhaShareEnvironment {
+  const filesAvailable = typeof File === "function";
+  const browserNavigator =
+    typeof navigator === "undefined" ? null : navigator;
   return {
-    canShare: navigator.canShare?.bind(navigator),
-    share: navigator.share?.bind(navigator),
+    ...(filesAvailable && typeof browserNavigator?.canShare === "function"
+      ? { canShare: browserNavigator.canShare.bind(browserNavigator) }
+      : {}),
+    ...(filesAvailable && typeof browserNavigator?.share === "function"
+      ? { share: browserNavigator.share.bind(browserNavigator) }
+      : {}),
     createFile: (blob, fileName) =>
       new File([blob], fileName, { type: "image/png" }),
   };
@@ -36,6 +43,31 @@ export function browserMayShareFiles(): boolean {
   );
 }
 
+function shareData(
+  blob: Blob,
+  fileName: string,
+  environment: ColinhaShareEnvironment,
+): ShareData {
+  return {
+    title: "Minha Colinha",
+    text: "Minha colinha eleitoral",
+    files: [environment.createFile(blob, fileName)],
+  };
+}
+
+export function canShareColinhaPng(
+  blob: Blob,
+  fileName: string,
+  environment: ColinhaShareEnvironment = browserShareEnvironment(),
+): boolean {
+  if (!environment.share || !environment.canShare) return false;
+  try {
+    return environment.canShare(shareData(blob, fileName, environment));
+  } catch {
+    return false;
+  }
+}
+
 export async function shareColinhaPng(
   blob: Blob,
   fileName: string,
@@ -44,12 +76,7 @@ export async function shareColinhaPng(
   if (!environment.share || !environment.canShare) {
     return { status: "unsupported" };
   }
-  const file = environment.createFile(blob, fileName);
-  const data: ShareData = {
-    title: "Minha Colinha",
-    text: "Minha colinha eleitoral",
-    files: [file],
-  };
+  const data = shareData(blob, fileName, environment);
   if (!environment.canShare(data)) {
     return { status: "unsupported" };
   }

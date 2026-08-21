@@ -153,7 +153,7 @@ Para legenda, deve incluir número, sigla e a indicação `VOTO DE LEGENDA`. Bra
 
 **RN-064.** O layout deve priorizar legibilidade do número, usando a fotografia como confirmação visual.
 
-**RN-065.** Quando o navegador suportar Web Share com arquivos, a mesma imagem pode ser preparada localmente e compartilhada como `File` após uma segunda ação explícita, preservando a ativação exigida pelo navegador. Cancelamento não é erro; sem suporte, o download permanece disponível.
+**RN-065.** Quando o navegador suportar Web Share com arquivos, a imagem deve ser preparada localmente antes de habilitar a ação `Compartilhar`. Um único toque aceito abre o compartilhamento do sistema com o mesmo `Blob` reutilizado pelo download, preservando a ativação transitória exigida pelo navegador. Cancelamento não é erro; sem suporte, o download permanece disponível.
 
 **RN-066.** Compartilhar o projeto transmite apenas a URL pública. Escolhas nunca entram em URL, query string, hash ou clipboard automático.
 

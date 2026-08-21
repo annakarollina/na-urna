@@ -21,6 +21,7 @@ export type {
 export { generateColinhaPng } from "./png.ts";
 export {
   browserMayShareFiles,
+  canShareColinhaPng,
   shareColinhaPng,
 } from "./share.ts";
 export type {

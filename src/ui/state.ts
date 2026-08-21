@@ -20,6 +20,12 @@ import {
 import { STATE_NAMES } from "../location/states.ts";
 import type { SelectionSession } from "../selection/session.ts";
 
+export interface PreparedExport {
+  readonly blob: Blob;
+  readonly fileName: string;
+  readonly shareable: boolean;
+}
+
 export interface ApplicationState {
   readonly election: ElectionConfig;
   readonly datasetKind: CandidateDatasetKind;
@@ -43,7 +49,8 @@ export interface ApplicationState {
   exportError: string | null;
   exportVersion: number;
   exportAction: "download" | "share" | null;
-  preparedShare: Readonly<{ blob: Blob; fileName: string }> | null;
+  exportPreparationStatus: "idle" | "scheduled" | "generating" | "ready" | "error";
+  preparedExport: PreparedExport | null;
   shareMessage: string | null;
   exportOnlyFilled: boolean;
   aboutOpen: boolean;
@@ -80,7 +87,8 @@ export function createApplicationState(
     exportError: null,
     exportVersion: 0,
     exportAction: null,
-    preparedShare: null,
+    exportPreparationStatus: "idle",
+    preparedExport: null,
     shareMessage: null,
     exportOnlyFilled: false,
     aboutOpen: false,
@@ -155,7 +163,8 @@ export function invalidateExport(state: ApplicationState): void {
   state.exportUrl = null;
   state.exportError = null;
   state.exportAction = null;
-  state.preparedShare = null;
+  state.exportPreparationStatus = "idle";
+  state.preparedExport = null;
   state.shareMessage = null;
   state.exportVersion += 1;
 }

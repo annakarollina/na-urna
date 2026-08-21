@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  canShareColinhaPng,
   shareColinhaPng,
   type ColinhaShareEnvironment,
 } from "./share.ts";
@@ -18,6 +19,26 @@ function environment(
 }
 
 describe("compartilhamento local da colinha", () => {
+  it("confirma antecipadamente se o arquivo PNG pode ser compartilhado", () => {
+    const canShare = vi.fn(() => true);
+    const blob = new Blob(["png"], { type: "image/png" });
+
+    expect(
+      canShareColinhaPng(
+        blob,
+        "minha-colinha-2026-SP.png",
+        environment({ canShare }),
+      ),
+    ).toBe(true);
+    expect(canShare).toHaveBeenCalledWith(
+      expect.objectContaining({
+        files: [
+          expect.objectContaining({ name: "minha-colinha-2026-SP.png" }),
+        ],
+      }),
+    );
+  });
+
   it("compartilha o mesmo PNG como arquivo quando há suporte", async () => {
     const share = vi.fn(async () => undefined);
     const operation = shareColinhaPng(

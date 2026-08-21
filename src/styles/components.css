@@ -1302,6 +1302,16 @@ progress::-moz-progress-bar {
   text-decoration: none;
 }
 
+.share-colinha.is-preparing::after {
+  inline-size: 0.8rem;
+  block-size: 0.8rem;
+  border: 2px solid currentcolor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  content: "";
+}
+
 .share-project {
   margin-top: 1.2rem;
   padding: 0.65rem 0.9rem;

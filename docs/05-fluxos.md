@@ -107,7 +107,7 @@ flowchart TD
 6. um único comando gera e inicia o download; um link manual aparece somente se o navegador bloquear esse início;
 7. nenhuma requisição com o conteúdo da colinha é feita.
 
-Quando Web Share com arquivos está disponível, a mesma composição vira um `File` PNG mantido somente em memória. Depois de preparada, uma segunda ação explícita abre imediatamente o menu nativo, respeitando a ativação exigida pelo navegador. Sem suporte, o usuário baixa o arquivo; cancelamento do menu não é tratado como falha.
+Quando há ao menos uma escolha, a aplicação invalida a versão anterior e prepara, após uma espera curta, um único `Blob` PNG mantido somente em memória. Download e compartilhamento reutilizam esse mesmo objeto. Quando Web Share com arquivos está disponível, `Compartilhar` permanece desabilitado durante a preparação; todo toque aceito abre imediatamente o menu nativo, respeitando a ativação transitória exigida pelo navegador. Sem suporte, o usuário baixa o arquivo; cancelamento do menu não é tratado como falha.
 
 ## 8. Alteração da circunscrição
 

@@ -12,6 +12,7 @@ import {
 import {
   colinhaFileName,
   composeColinhaModel,
+  canShareColinhaPng,
   generateColinhaPng,
   shareColinhaPng,
   triggerBlobDownload,
@@ -37,6 +38,11 @@ import { LocationPicker } from "./components/LocationPicker.tsx";
 import { Review } from "./components/Review.tsx";
 import { VotingSlot } from "./components/VotingSlot.tsx";
 import {
+  createVersionedPreparationCache,
+  invalidateVersionedPreparation,
+  prepareVersionedValue,
+} from "./export-cache.ts";
+import {
   createApplicationState,
   focusAfterRender,
   hasSelections,
@@ -47,7 +53,10 @@ import {
   searchInputId,
   selectionCount,
   type ApplicationState,
+  type PreparedExport,
 } from "./state.ts";
+
+const EXPORT_PREPARATION_DELAY_MS = 500;
 
 interface AppProps {
   currentYear?: number;
@@ -66,9 +75,54 @@ function ConfiguredApplication({
   const stateRef = useRef<ApplicationState>(
     createApplicationState(election, datasetKind),
   );
+  const exportCacheRef = useRef(
+    createVersionedPreparationCache<PreparedExport>(0),
+  );
   const [, setRenderVersion] = useState(0);
   const state = stateRef.current;
   const refresh = () => setRenderVersion((version) => version + 1);
+  const invalidateCurrentExport = (): void => {
+    invalidateExport(state);
+    invalidateVersionedPreparation(
+      exportCacheRef.current,
+      state.exportVersion,
+    );
+  };
+
+  const prepareCurrentExport = (version: number): Promise<PreparedExport> =>
+    prepareVersionedValue(exportCacheRef.current, version, async () => {
+      const session = state.session;
+      if (!session || resolvedSelectionCount(state) === 0) {
+        throw new Error("Faça pelo menos uma escolha antes de gerar a colinha.");
+      }
+      if (
+        state.datasetKind === CANDIDATE_DATASET_KIND.OFFICIAL_SNAPSHOT &&
+        !state.metadata
+      ) {
+        throw new Error(
+          "Aguarde a confirmação da data do snapshot oficial antes de gerar.",
+        );
+      }
+
+      const candidates = [...state.files.values()].flatMap(
+        (file) => file.candidates,
+      );
+      const model = composeColinhaModel(session, candidates, {
+        notice:
+          state.datasetKind === CANDIDATE_DATASET_KIND.DEVELOPMENT_FIXTURE
+            ? "DADOS FICTÍCIOS — DESENVOLVIMENTO — NÃO USE PARA VOTAR"
+            : null,
+        snapshotImportedAt: state.metadata?.importedAt ?? null,
+        omitEmptyRows: state.exportOnlyFilled,
+      });
+      const blob = await generateColinhaPng(model);
+      const fileName = colinhaFileName(state.election.year, session.location);
+      return {
+        blob,
+        fileName,
+        shareable: canShareColinhaPng(blob, fileName),
+      };
+    });
 
   useEffect(() => {
     if (datasetKind !== CANDIDATE_DATASET_KIND.OFFICIAL_SNAPSHOT) return;
@@ -98,6 +152,56 @@ function ConfiguredApplication({
   }, [datasetKind, election.year]);
 
   useEffect(() => {
+    const metadataReady =
+      state.datasetKind === CANDIDATE_DATASET_KIND.DEVELOPMENT_FIXTURE ||
+      state.metadata !== null;
+    if (
+      !state.session ||
+      state.loading ||
+      resolvedSelectionCount(state) === 0 ||
+      !metadataReady
+    ) {
+      return;
+    }
+
+    const requestedVersion = state.exportVersion;
+    state.exportPreparationStatus = "scheduled";
+    state.exportError = null;
+    refresh();
+    const timer = window.setTimeout(() => {
+      if (requestedVersion !== state.exportVersion || state.preparedExport) return;
+      state.exportPreparationStatus = "generating";
+      refresh();
+      void prepareCurrentExport(requestedVersion)
+        .then((prepared) => {
+          if (requestedVersion !== state.exportVersion) return;
+          state.preparedExport = prepared;
+          state.exportPreparationStatus = "ready";
+          state.exportError = null;
+        })
+        .catch((error: unknown) => {
+          if (requestedVersion !== state.exportVersion) return;
+          state.exportPreparationStatus = "error";
+          state.exportError =
+            error instanceof Error
+              ? error.message
+              : "Não foi possível preparar a imagem PNG.";
+          state.announcement = state.exportError;
+        })
+        .finally(refresh);
+    }, EXPORT_PREPARATION_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    state.exportOnlyFilled,
+    state.exportVersion,
+    state.files,
+    state.loading,
+    state.metadata,
+    state.session,
+  ]);
+
+  useEffect(() => {
     const releaseExportUrl = () => {
       if (state.exportUrl) URL.revokeObjectURL(state.exportUrl);
     };
@@ -121,7 +225,13 @@ function ConfiguredApplication({
   const loadCurrentCandidates = async (moveFocus: boolean): Promise<void> => {
     const session = state.session;
     if (!session) return;
-    if (state.exportStatus !== "idle") invalidateExport(state);
+    if (
+      state.exportStatus !== "idle" ||
+      state.exportPreparationStatus !== "idle" ||
+      state.preparedExport
+    ) {
+      invalidateCurrentExport();
+    }
     state.errors = new Map();
     state.loading = true;
     state.announcement = `Carregando candidatos para ${locationLabel(session.location)}.`;
@@ -148,7 +258,7 @@ function ConfiguredApplication({
   };
 
   const selectState = (uf: FederativeUnit): void => {
-    invalidateExport(state);
+    invalidateCurrentExport();
     const location = { scope: TERRITORIAL_SCOPE.STATE, uf } as const;
     state.session = state.session
       ? changeSelectionLocation(state.session, location)
@@ -199,7 +309,7 @@ function ConfiguredApplication({
       );
       state.announcement = result.error.message;
     } else {
-      invalidateExport(state);
+      invalidateCurrentExport();
       state.session = result.session;
       const errors = new Map(state.selectionErrors);
       errors.delete(slot.id);
@@ -227,7 +337,7 @@ function ConfiguredApplication({
       );
       state.announcement = result.error.message;
     } else {
-      invalidateExport(state);
+      invalidateCurrentExport();
       state.session = result.session;
       const errors = new Map(state.selectionErrors);
       errors.delete(slot.id);
@@ -241,7 +351,7 @@ function ConfiguredApplication({
     focusAfterRender(`slot-title-${slot.order}`);
   };
 
-  const generateExport = async (action: "download" | "share"): Promise<void> => {
+  const downloadExport = async (): Promise<void> => {
     const session = state.session;
     if (!session || resolvedSelectionCount(state) === 0) {
       state.exportStatus = "error";
@@ -260,50 +370,35 @@ function ConfiguredApplication({
       return;
     }
 
-    invalidateExport(state);
     state.exportStatus = "generating";
-    state.exportAction = action;
+    state.exportAction = "download";
+    state.exportError = null;
+    state.shareMessage = null;
     state.announcement = "Gerando a imagem da colinha neste dispositivo.";
     const requestedVersion = state.exportVersion;
     refresh();
-    const candidates = [...state.files.values()].flatMap((file) => file.candidates);
-    const model = composeColinhaModel(session, candidates, {
-      notice:
-        state.datasetKind === CANDIDATE_DATASET_KIND.DEVELOPMENT_FIXTURE
-          ? "DADOS FICTÍCIOS — DESENVOLVIMENTO — NÃO USE PARA VOTAR"
-          : null,
-      snapshotImportedAt: state.metadata?.importedAt ?? null,
-      omitEmptyRows: state.exportOnlyFilled,
-    });
 
     try {
-      const blob = await generateColinhaPng(model);
+      const prepared = await prepareCurrentExport(requestedVersion);
       if (requestedVersion !== state.exportVersion) return;
-      const fileName = colinhaFileName(state.election.year, session.location);
-      if (action === "share") {
-        state.preparedShare = { blob, fileName };
+      state.preparedExport = prepared;
+      state.exportPreparationStatus = "ready";
+      const download = triggerBlobDownload(prepared.blob, prepared.fileName);
+      if (download.started) {
         state.exportStatus = "idle";
         state.exportAction = null;
-        state.shareMessage =
-          "Imagem pronta. Use o botão novamente para abrir o compartilhamento do dispositivo.";
-        state.announcement = state.shareMessage;
+        state.announcement = "Download da colinha iniciado.";
       } else {
-        const download = triggerBlobDownload(blob, fileName);
-        if (download.started) {
-          state.exportStatus = "idle";
-          state.exportAction = null;
-          state.announcement = "Download da colinha iniciado.";
-        } else {
-          state.exportUrl = download.fallbackUrl;
-          state.exportStatus = "fallback";
-          state.exportAction = null;
-          state.announcement =
-            "O download automático não começou. Use o link manual disponível.";
-        }
+        state.exportUrl = download.fallbackUrl;
+        state.exportStatus = "fallback";
+        state.exportAction = null;
+        state.announcement =
+          "O download automático não começou. Use o link manual disponível.";
       }
     } catch (error) {
       if (requestedVersion !== state.exportVersion) return;
       state.exportStatus = "error";
+      state.exportPreparationStatus = "error";
       state.exportAction = null;
       state.exportError =
         error instanceof Error ? error.message : "Não foi possível gerar a imagem PNG.";
@@ -314,11 +409,8 @@ function ConfiguredApplication({
   };
 
   const sharePreparedExport = (): void => {
-    const prepared = state.preparedShare;
-    if (!prepared) {
-      void generateExport("share");
-      return;
-    }
+    const prepared = state.preparedExport;
+    if (!prepared?.shareable) return;
     const shareOperation = shareColinhaPng(prepared.blob, prepared.fileName);
     state.exportStatus = "generating";
     state.exportAction = "share";
@@ -459,14 +551,14 @@ function ConfiguredApplication({
                 }}
                 onToggleOnlyFilled={(checked) => {
                   state.exportOnlyFilled = checked;
-                  invalidateExport(state);
+                  invalidateCurrentExport();
                   state.announcement = checked
                     ? "A imagem mostrará somente as escolhas preenchidas."
                     : "A imagem também mostrará as posições não preenchidas.";
                   refresh();
                   focusAfterRender("export-only-filled");
                 }}
-                onDownload={() => void generateExport("download")}
+                onDownload={() => void downloadExport()}
                 onShare={sharePreparedExport}
                 onFallbackDownload={(fallbackUrl) => {
                   state.announcement = "Download da colinha iniciado.";

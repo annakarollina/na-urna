@@ -2,6 +2,12 @@ import { join } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
+declare global {
+  interface Window {
+    __exportProbe: { generations: number; shareCalls: number };
+  }
+}
+
 const snapshotStylePath = join(process.cwd(), "e2e", "snapshot.css");
 
 async function openApplication(page: Page): Promise<void> {
@@ -74,6 +80,34 @@ async function expectActionToPreserveScroll(
       Math.abs((await page.evaluate(() => window.scrollY)) - before),
     )
     .toBeLessThanOrEqual(2);
+}
+
+async function installExportProbe(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const probe = { generations: 0, shareCalls: 0 };
+    Object.assign(window, { __exportProbe: probe });
+    const originalToBlob = HTMLCanvasElement.prototype.toBlob;
+    HTMLCanvasElement.prototype.toBlob = function (
+      callback,
+      type,
+      quality,
+    ): void {
+      probe.generations += 1;
+      originalToBlob.call(this, callback, type, quality);
+    };
+    Object.defineProperties(Navigator.prototype, {
+      canShare: {
+        configurable: true,
+        value: (data: ShareData) => Boolean(data.files?.length),
+      },
+      share: {
+        configurable: true,
+        value: async () => {
+          probe.shareCalls += 1;
+        },
+      },
+    });
+  });
 }
 
 test("a página monta e mantém o scroll normal", async ({ page, browserName }) => {
@@ -150,6 +184,47 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
   await expect(
     page.getByRole("button", { name: "Baixar minha colinha" }),
   ).toBeEnabled();
+});
+
+test("compartilha em um toque e reutiliza o PNG preparado", async ({ page }) => {
+  await installExportProbe(page);
+  await openApplication(page);
+  await selectSaoPaulo(page);
+
+  await openCandidatePicker(page, "Deputado Federal");
+  await page
+    .getByRole("button", {
+      name: "Selecionar EXEMPLO FEDERAL A, número 1010, partido EXM",
+    })
+    .click();
+
+  const share = page.getByRole("button", { name: "Compartilhar", exact: true });
+  await expect(share).toBeDisabled();
+  await expect(share).toBeEnabled({ timeout: 10_000 });
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.__exportProbe.generations,
+      ),
+    )
+    .toBe(1);
+
+  await share.click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.__exportProbe.shareCalls,
+      ),
+    )
+    .toBe(1);
+
+  const download = page.getByRole("button", { name: "Baixar minha colinha" });
+  await Promise.all([page.waitForEvent("download"), download.click()]);
+  expect(
+    await page.evaluate(
+      () => window.__exportProbe.generations,
+    ),
+  ).toBe(1);
 });
 
 test("ações de escolha preservam a posição da página", async ({ page }) => {

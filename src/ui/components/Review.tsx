@@ -79,7 +79,16 @@ function ExportActions({
     state.datasetKind === CANDIDATE_DATASET_KIND.DEVELOPMENT_FIXTURE ||
     state.metadata !== null;
   const generating = state.exportStatus === "generating";
-  const shareReady = state.preparedShare !== null;
+  const preparing =
+    state.exportPreparationStatus === "scheduled" ||
+    state.exportPreparationStatus === "generating";
+  const shareApiAvailable = browserMayShareFiles();
+  const shareReady =
+    state.exportPreparationStatus === "ready" &&
+    state.preparedExport?.shareable === true;
+  const shareUnavailable =
+    state.exportPreparationStatus === "ready" &&
+    state.preparedExport?.shareable === false;
   return (
     <div
       id="export-actions"
@@ -98,21 +107,21 @@ function ExportActions({
           ? "Gerando sua colinha…"
           : "Baixar minha colinha"}
       </button>
-      {browserMayShareFiles() ? (
+      {shareApiAvailable && !shareUnavailable ? (
         <button
           type="button"
-          class="secondary-button share-colinha"
-          disabled={!hasResolvedSelection || !metadataReady || generating}
+          class={`secondary-button share-colinha${preparing ? " is-preparing" : ""}`}
+          disabled={
+            !hasResolvedSelection ||
+            !metadataReady ||
+            !shareReady ||
+            generating
+          }
+          aria-busy={preparing || (generating && state.exportAction === "share")}
           onClick={onShare}
         >
           <ShareIcon />
-          {generating && state.exportAction === "share"
-            ? shareReady
-              ? "Compartilhando…"
-              : "Preparando imagem…"
-            : shareReady
-              ? "Compartilhar imagem pronta"
-              : "Compartilhar minha colinha"}
+          Compartilhar
         </button>
       ) : hasResolvedSelection ? (
         <p class="export-hint">
@@ -131,10 +140,18 @@ function ExportActions({
       ) : null}
       {generating ? (
         <p class="export-generating" role="status">
-          Fotos e textos estão sendo compostos neste dispositivo…
+          {state.exportAction === "share"
+            ? "Abrindo o compartilhamento do dispositivo…"
+            : "Fotos e textos estão sendo compostos neste dispositivo…"}
+        </p>
+      ) : preparing && hasResolvedSelection && metadataReady ? (
+        <p class="export-generating" role="status">
+          Preparando a imagem local para compartilhar…
         </p>
       ) : null}
-      {state.exportStatus === "error" && state.exportError ? (
+      {(state.exportStatus === "error" ||
+        state.exportPreparationStatus === "error") &&
+      state.exportError ? (
         <p class="error-state" role="alert">
           {state.exportError}
         </p>
