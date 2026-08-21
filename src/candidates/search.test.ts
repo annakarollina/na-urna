@@ -3,10 +3,8 @@ import { describe, expect, it } from "vitest";
 import { ELECTORAL_OFFICE, TERRITORIAL_SCOPE } from "../election/types.ts";
 import { CANDIDATE_STATUS, type Candidate } from "./model.ts";
 import {
-  MAX_VISIBLE_CANDIDATE_RESULTS,
   candidatePartyOptions,
   searchCandidates,
-  visibleCandidateSearchResults,
 } from "./search.ts";
 
 const candidates: readonly Candidate[] = [
@@ -123,29 +121,6 @@ describe("busca local de candidatos", () => {
       "100",
       "101",
     ]);
-  });
-
-  it("limita a apresentação depois de filtrar a coleção completa", () => {
-    const manyCandidates = Array.from({ length: 24 }, (_, index): Candidate => ({
-      ...candidates[0]!,
-      id: `fixture-many-${index}`,
-      number: String(1000 + index),
-      ballotName: `Pessoa ${index}`,
-    }));
-
-    const result = visibleCandidateSearchResults(manyCandidates, "");
-
-    expect(result.total).toBe(24);
-    expect(result.candidates).toHaveLength(MAX_VISIBLE_CANDIDATE_RESULTS);
-    expect(result.hasMore).toBe(true);
-    expect(
-      visibleCandidateSearchResults(
-        manyCandidates,
-        "",
-        null,
-        MAX_VISIBLE_CANDIDATE_RESULTS * 2,
-      ).candidates,
-    ).toHaveLength(24);
   });
 
   it("combina busca textual e filtro de partido", () => {

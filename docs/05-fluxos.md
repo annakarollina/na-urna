@@ -70,7 +70,7 @@ flowchart LR
     F --> G[Guardar seleção somente em memória]
 ```
 
-A busca ignora caixa e acentos. Cada termo textual precisa ser prefixo de alguma palavra do nome de urna; a consulta numérica precisa ser prefixo do número eleitoral. Ao focar a busca ou usar o filtro, um painel flutuante mostra os primeiros 20 resultados em ordem determinística, sem aumentar a página. Busca e filtro de partido funcionam juntos; “Mostrar mais” acrescenta até 20 resultados por ação.
+A busca ignora caixa e acentos. Cada termo textual precisa ser prefixo de alguma palavra do nome de urna; a consulta numérica precisa ser prefixo do número eleitoral. No desktop, um picker flutuante usa a Popover API quando disponível e um fallback CSS com Escape, clique externo e restauração de foco nos demais navegadores. Em telas estreitas ou com ponteiro coarse, o mesmo componente ocupa `100dvh` e mantém a lista em uma área rolável própria. Partido e busca filtram juntos a lista completa, contínua e ordenada numericamente, sem paginação de apresentação ou “Mostrar mais”.
 
 Além de candidatura, o slot aceita branco e nulo. Nos cargos proporcionais de 2026 — Deputado Federal e Deputado Estadual ou Distrital — também aceita legenda extraída dos próprios candidatos carregados.
 

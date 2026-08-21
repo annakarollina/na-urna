@@ -24,6 +24,15 @@ html:has(.about-dialog[open]) body {
   overscroll-behavior: none;
 }
 
+html:has(.candidate-picker-surface[data-mode="mobile"]:not([hidden])) {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html:has(.candidate-picker-surface[data-mode="mobile"]:not([hidden])) body {
+  overscroll-behavior: none;
+}
+
 body {
   min-width: 20rem;
   min-height: 100vh;

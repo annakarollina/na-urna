@@ -94,8 +94,14 @@ async function selectCandidate(
   if (!input || !results) {
     throw new Error(`Busca não encontrada para o slot ${slotId}.`);
   }
-  await act(async () => {
-    input.dispatchEvent(new Event("focus"));
+  const trigger = container.querySelector<HTMLButtonElement>(
+    `#candidate-picker-trigger-${slotId}`,
+  );
+  if (trigger?.getAttribute("aria-expanded") !== "true") {
+    await act(async () => trigger?.click());
+  }
+  await vi.waitFor(() => {
+    expect(trigger?.getAttribute("aria-expanded")).toBe("true");
   });
   let card: HTMLButtonElement | undefined;
   await vi.waitFor(() => {
@@ -162,19 +168,18 @@ afterEach(() => {
 });
 
 describe("integração da UI Preact", () => {
-  it("painel de candidatos: fechado por padrão, abre ao focar, fecha ao selecionar e reabre fechado após Trocar", async () => {
+  it("picker de candidatos: abre por ação explícita, fecha ao selecionar e reabre ao trocar", async () => {
     const container = await mountSpSession();
-    const input = container.querySelector<HTMLInputElement>("#search-federal_deputy-1");
-    const results = container.querySelector<HTMLElement>("#results-federal_deputy-1");
-    if (!input || !results) {
-      throw new Error("Busca de Deputado Federal não encontrada.");
+    const trigger = container.querySelector<HTMLButtonElement>(
+      "#candidate-picker-trigger-federal_deputy-1",
+    );
+    if (!trigger) {
+      throw new Error("Abertura do picker de Deputado Federal não encontrada.");
     }
 
-    expect(results.hidden).toBe(true);
-    await act(async () => {
-      input.dispatchEvent(new Event("focus"));
-    });
-    expect(results.hidden).toBe(false);
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    await act(async () => trigger.click());
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
 
     await selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL A");
 
@@ -187,25 +192,28 @@ describe("integração da UI Preact", () => {
         ?.click(),
     );
 
-    const reopenedResults = container.querySelector<HTMLElement>("#results-federal_deputy-1");
-    if (!reopenedResults) {
-      throw new Error("O painel não reabriu com o seletor original após Trocar.");
-    }
-    expect(reopenedResults.hidden).toBe(true);
+    const reopenedTrigger = container.querySelector<HTMLButtonElement>(
+      "#candidate-picker-trigger-federal_deputy-1",
+    );
+    await vi.waitFor(() => {
+      expect(reopenedTrigger?.getAttribute("aria-expanded")).toBe("true");
+    });
 
     await act(async () => {
-      container
-        .querySelector<HTMLInputElement>("#search-federal_deputy-1")
-        ?.dispatchEvent(new Event("focus"));
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+      );
     });
-    expect(reopenedResults.hidden).toBe(false);
+    expect(reopenedTrigger?.getAttribute("aria-expanded")).toBe("false");
 
+    await act(async () => reopenedTrigger?.click());
+    expect(reopenedTrigger?.getAttribute("aria-expanded")).toBe("true");
     await act(async () => {
-      container
-        .querySelector('[data-office="FEDERAL_DEPUTY"] .candidate-picker')
-        ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      document.body.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true }),
+      );
     });
-    expect(reopenedResults.hidden).toBe(true);
+    expect(reopenedTrigger?.getAttribute("aria-expanded")).toBe("false");
   });
 
   it("trocar candidato: volta direto ao seletor original e preserva as demais escolhas", async () => {
@@ -233,6 +241,38 @@ describe("integração da UI Preact", () => {
     expect(
       container.querySelector('[data-office="GOVERNOR"] .selected-candidate')?.textContent,
     ).toContain("EXEMPLO GOVERNO");
+  });
+
+  it("oferece voto de legenda dentro do picker após filtrar um partido", async () => {
+    const container = await mountSpSession();
+    const trigger = container.querySelector<HTMLButtonElement>(
+      "#candidate-picker-trigger-federal_deputy-1",
+    );
+    await act(async () => trigger?.click());
+
+    const party = container.querySelector<HTMLSelectElement>(
+      "#party-filter-federal_deputy-1",
+    );
+    if (!party) throw new Error("Filtro partidário não encontrado.");
+    await act(async () => {
+      party.value = "EXM";
+      party.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    const partyVote = container.querySelector<HTMLButtonElement>(
+      '[data-office="FEDERAL_DEPUTY"] .party-vote-action',
+    );
+    expect(partyVote?.textContent).toContain("10 · EXM");
+    expect(partyVote?.textContent).toContain("Usar como voto de legenda");
+    await act(async () => partyVote?.click());
+
+    expect(
+      container.querySelector(
+        '[data-office="FEDERAL_DEPUTY"] .selected-special-choice',
+      )?.textContent,
+    ).toContain("Voto de legenda");
+    expect(container.querySelector("details")).toBeNull();
+    expect(container.textContent).not.toContain("Mostrar mais");
   });
 
   it("dois senadores: impede repetir o mesmo candidato na segunda escolha", async () => {

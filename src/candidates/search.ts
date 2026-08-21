@@ -56,31 +56,6 @@ export function searchCandidates(
     .sort(compareCandidates);
 }
 
-export const MAX_VISIBLE_CANDIDATE_RESULTS = 20;
-
-export interface CandidateSearchPage {
-  readonly candidates: readonly Candidate[];
-  readonly total: number;
-  readonly hasMore: boolean;
-}
-
-export function visibleCandidateSearchResults(
-  candidates: readonly Candidate[],
-  query: string,
-  party: string | null = null,
-  limit = MAX_VISIBLE_CANDIDATE_RESULTS,
-): CandidateSearchPage {
-  if (!Number.isInteger(limit) || limit < 1) {
-    throw new Error("O limite da busca deve ser um inteiro positivo.");
-  }
-  const matches = searchCandidates(candidates, query, party);
-  return {
-    candidates: matches.slice(0, limit),
-    total: matches.length,
-    hasMore: matches.length > limit,
-  };
-}
-
 export interface CandidatePartyOption {
   readonly party: string;
   readonly partyNumber: string;

@@ -29,7 +29,16 @@ async function selectSaoPaulo(page: Page): Promise<void> {
   await expect(
     page
       .getByRole("region", { name: "Deputado Federal" })
-      .getByRole("combobox", { name: "Buscar nome ou número" }),
+      .getByRole("button", { name: "Escolher candidato" }),
+  ).toBeVisible();
+}
+
+async function openCandidatePicker(page: Page, slotName: string): Promise<void> {
+  const slot = page.getByRole("region", { name: slotName });
+  await slot.getByRole("button", { name: "Escolher candidato" }).click();
+  await expect(page.getByRole("dialog", { name: slotName })).toBeVisible();
+  await expect(
+    page.getByRole("searchbox", { name: "Nome ou número" }),
   ).toBeVisible();
 }
 
@@ -119,7 +128,7 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
   await selectSaoPaulo(page);
 
   const slot = page.getByRole("region", { name: "Deputado Federal" });
-  await slot.getByRole("combobox", { name: "Buscar nome ou número" }).focus();
+  await openCandidatePicker(page, "Deputado Federal");
   await page
     .getByRole("button", {
       name: "Selecionar EXEMPLO FEDERAL A, número 1010, partido EXM",
@@ -128,7 +137,9 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
   await expect(slot.getByText("EXEMPLO FEDERAL A", { exact: true })).toBeVisible();
 
   await slot.getByRole("button", { name: "Trocar" }).click();
-  await slot.getByRole("combobox", { name: "Buscar nome ou número" }).focus();
+  await expect(
+    page.getByRole("searchbox", { name: "Nome ou número" }),
+  ).toBeVisible();
   await page
     .getByRole("button", {
       name: "Substituir por EXEMPLO FEDERAL B, número 2020, partido TST",
@@ -151,8 +162,8 @@ test("ações de escolha preservam a posição da página", async ({ page }) => 
     window.scrollTo(0, Math.max(0, top - 96));
   });
 
-  await slot.getByRole("combobox", { name: "Buscar nome ou número" }).focus();
   await expectActionToPreserveScroll(page, async () => {
+    await openCandidatePicker(page, "Deputado Federal");
     await page
       .getByRole("button", {
         name: "Selecionar EXEMPLO FEDERAL A, número 1010, partido EXM",
@@ -164,8 +175,21 @@ test("ações de escolha preservam a posição da página", async ({ page }) => 
   await expectActionToPreserveScroll(page, async () => {
     await slot.getByRole("button", { name: "Trocar" }).click();
     await expect(
-      slot.getByRole("combobox", { name: "Buscar nome ou número" }),
+      page.getByRole("searchbox", { name: "Nome ou número" }),
     ).toBeVisible();
+    const mobile = await page.evaluate(() =>
+      window.matchMedia("(max-width: 767px), (pointer: coarse)").matches,
+    );
+    if (mobile) {
+      await page
+        .getByRole("button", { name: "Fechar seleção de Deputado Federal" })
+        .click();
+    } else {
+      await page.keyboard.press("Escape");
+    }
+    await expect(
+      page.getByRole("searchbox", { name: "Nome ou número" }),
+    ).toBeHidden();
   });
 
   await expectActionToPreserveScroll(page, async () => {
@@ -176,8 +200,14 @@ test("ações de escolha preservam a posição da página", async ({ page }) => 
   await expectActionToPreserveScroll(page, async () => {
     await slot.getByRole("button", { name: "Trocar" }).click();
     await expect(
-      slot.getByRole("combobox", { name: "Buscar nome ou número" }),
+      page.getByRole("searchbox", { name: "Nome ou número" }),
     ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Fechar seleção de Deputado Federal" })
+      .click();
+    await expect(
+      page.getByRole("searchbox", { name: "Nome ou número" }),
+    ).toBeHidden();
   });
 });
 

@@ -117,7 +117,7 @@ Uma seleção é representada explicitamente como candidatura, legenda, branco o
 
 **RN-044.** A seleção deve exibir foto, número, nome de urna, partido e cargo de forma suficientemente clara para confirmação visual.
 
-**RN-045.** Sem busca ou filtro, a aplicação apresenta os primeiros 20 candidatos em ordem numérica e nominal determinística. “Mostrar mais” acrescenta os próximos 20, sem rolagem infinita.
+**RN-045.** Sem busca ou filtro, a aplicação apresenta todos os candidatos elegíveis em uma lista contínua, em ordem numérica e nominal determinística, sem ranking, recomendação ou paginação de apresentação.
 
 **RN-046.** O filtro de partido é extraído dos candidatos carregados, ordenado deterministicamente e combinado com a busca textual.
 
