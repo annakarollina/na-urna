@@ -68,6 +68,11 @@
   --space-7: 2rem;
   --space-8: 3rem;
 
+  /* Mesmo valor lido em JS (readPickerGapPx em CandidatePicker.tsx) para
+     ancorar a superfície e calcular o espaço vertical disponível — um único
+     gap pequeno para os dois cálculos, sem duplicar valor entre CSS e JS. */
+  --picker-trigger-gap: var(--space-1);
+
   --radius-sm: 0.35rem;
   --radius-md: 0.65rem;
   --radius-lg: 1rem;

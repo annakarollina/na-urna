@@ -495,7 +495,7 @@ select {
 .candidate-picker-surface[data-mode="desktop"] {
   position: absolute;
   inset-inline: 0;
-  inset-block-start: calc(100% + var(--space-2));
+  inset-block-start: calc(100% + var(--picker-trigger-gap));
 }
 
 .candidate-picker-surface[data-mode="mobile"] {

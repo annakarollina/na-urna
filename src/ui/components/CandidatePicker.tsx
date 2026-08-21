@@ -55,11 +55,28 @@ function useMobilePicker(): boolean {
   return mobile;
 }
 
-const AVAILABLE_SPACE_MARGIN_PX = 16;
+// A superfície fica ancorada a `--picker-trigger-gap` (ver components.css); o
+// espaço reservado no fim do viewport reutiliza o mesmo token para não haver
+// dois valores de espaçamento divergentes entre CSS e JS.
+const PICKER_GAP_PROPERTY = "--picker-trigger-gap";
+const PICKER_GAP_FALLBACK_PX = 4;
+
+function readPickerGapPx(): number {
+  const rootStyle = getComputedStyle(document.documentElement);
+  const rootFontSizePx = parseFloat(rootStyle.fontSize) || 16;
+  const rawValue = rootStyle.getPropertyValue(PICKER_GAP_PROPERTY).trim();
+  const remMatch = /^([\d.]+)rem$/.exec(rawValue);
+  const remValue = remMatch?.[1];
+  if (remValue) return Number.parseFloat(remValue) * rootFontSizePx;
+  const pxMatch = /^([\d.]+)px$/.exec(rawValue);
+  const pxValue = pxMatch?.[1];
+  if (pxValue) return Number.parseFloat(pxValue);
+  return PICKER_GAP_FALLBACK_PX;
+}
 
 function measureAvailableBlockSize(results: HTMLElement): number {
   const rect = results.getBoundingClientRect();
-  return Math.max(0, window.innerHeight - rect.top - AVAILABLE_SPACE_MARGIN_PX);
+  return Math.max(0, window.innerHeight - rect.top - readPickerGapPx());
 }
 
 function CandidateResults({
