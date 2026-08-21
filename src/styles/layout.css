@@ -1,0 +1,12 @@
+#app {
+  display: grid;
+  min-height: 100vh;
+  grid-template-rows: auto 1fr auto;
+}
+
+.site-header-inner,
+.page,
+.site-footer {
+  width: min(100% - 2rem, var(--content-wide));
+  margin-inline: auto;
+}

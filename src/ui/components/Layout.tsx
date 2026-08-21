@@ -4,6 +4,7 @@ import {
   CANDIDATE_DATASET_KIND,
   type CandidateDatasetKind,
 } from "../../candidates/index.ts";
+import { InfoIcon, ShareIcon } from "./Icon.tsx";
 
 export function Header({
   datasetKind,
@@ -29,6 +30,7 @@ export function Header({
             aria-haspopup="dialog"
             onClick={onAbout}
           >
+            <InfoIcon />
             Sobre
           </button>
         ) : null}
@@ -119,6 +121,7 @@ export function AboutDialog({
                 });
             }}
           >
+            <ShareIcon />
             Compartilhar este projeto
           </button>
         ) : null}

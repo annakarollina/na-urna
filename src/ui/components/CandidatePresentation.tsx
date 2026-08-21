@@ -8,6 +8,7 @@ import {
   VOTE_CHOICE_TYPE,
   type VoteChoice,
 } from "../../election/types.ts";
+import { PHOTO_PLACEHOLDER_SHAPE } from "../../shared/photo-placeholder.ts";
 import { publicPath } from "../../shared/paths.ts";
 
 export function CandidatePhoto({ candidate }: { candidate: Candidate }) {
@@ -15,7 +16,29 @@ export function CandidatePhoto({ candidate }: { candidate: Candidate }) {
   return (
     <div class="candidate-photo">
       {!candidate.photoPath || failed ? (
-        <span>{failed ? "Falha ao carregar a foto" : "Foto não disponível"}</span>
+        <>
+          <svg
+            class="photo-placeholder"
+            viewBox={`0 0 ${PHOTO_PLACEHOLDER_SHAPE.viewBox.width} ${PHOTO_PLACEHOLDER_SHAPE.viewBox.height}`}
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle
+              cx={PHOTO_PLACEHOLDER_SHAPE.head.cx}
+              cy={PHOTO_PLACEHOLDER_SHAPE.head.cy}
+              r={PHOTO_PLACEHOLDER_SHAPE.head.radius}
+            />
+            <ellipse
+              cx={PHOTO_PLACEHOLDER_SHAPE.shoulders.cx}
+              cy={PHOTO_PLACEHOLDER_SHAPE.shoulders.cy}
+              rx={PHOTO_PLACEHOLDER_SHAPE.shoulders.radiusX}
+              ry={PHOTO_PLACEHOLDER_SHAPE.shoulders.radiusY}
+            />
+          </svg>
+          <span class="sr-only">
+            {failed ? "Falha ao carregar a foto" : "Foto não disponível"}
+          </span>
+        </>
       ) : (
         <img
           src={publicPath(candidate.photoPath)}

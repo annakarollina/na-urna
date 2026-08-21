@@ -11,6 +11,7 @@ import {
   CandidatePhoto,
   ChoiceDetails,
 } from "./CandidatePresentation.tsx";
+import { DownloadIcon, ShareIcon } from "./Icon.tsx";
 
 function ExportRowPreference({
   state,
@@ -69,6 +70,7 @@ function ExportActions({
           download={colinhaFileName(state.election.year, state.session.location)}
           onClick={() => onFallbackDownload(fallbackUrl)}
         >
+          <DownloadIcon />
           O download não começou? Baixar manualmente
         </a>
       </div>
@@ -93,6 +95,7 @@ function ExportActions({
         disabled={!hasResolvedSelection || !metadataReady || generating}
         onClick={onDownload}
       >
+        <DownloadIcon />
         {generating && state.exportAction === "download"
           ? "Gerando sua colinha…"
           : "Baixar minha colinha"}
@@ -104,6 +107,7 @@ function ExportActions({
           disabled={!hasResolvedSelection || !metadataReady || generating}
           onClick={onShare}
         >
+          <ShareIcon />
           {generating && state.exportAction === "share"
             ? shareReady
               ? "Compartilhando…"
@@ -167,7 +171,7 @@ export function Review({
   const complete = resolved === session.slots.length;
   const hasResolvedSelection = resolved > 0;
   return (
-    <section class="review" aria-labelledby="review-title">
+    <section class="review on-dark" aria-labelledby="review-title">
       <h2 id="review-title">Revise sua colinha</h2>
       <p class="review-description">
         Confira candidaturas, legendas, votos em branco ou nulos antes de gerar

@@ -1,0 +1,101 @@
+:root {
+  /* Primitive palette. Keep these values aligned with src/shared/palette.ts. */
+  --green-900: #123b27;
+  --green-800: #173f2d;
+  --green-700: #35644f;
+  --green-100: #dbe9df;
+  --green-050: #eef6f0;
+
+  --neutral-900: #18231d;
+  --neutral-700: #26352d;
+  --neutral-500: #536057;
+  --neutral-400: #69736d;
+  --neutral-300: #a3b0a7;
+  --neutral-200: #cbd2cb;
+  --neutral-100: #e5e3da;
+  --neutral-050: #f4f3ed;
+  --cream: #fffef9;
+
+  --amber-700: #785513;
+  --amber-500: #d27431;
+  --amber-200: #ffe3ad;
+
+  --red-700: #7c2d22;
+  --red-100: #ffebe6;
+
+  /* Semantic colors. Components consume this layer, never primitives. */
+  --color-brand: var(--green-800);
+  --color-brand-strong: var(--green-900);
+  --color-brand-hover: var(--green-700);
+  --color-brand-soft: var(--green-100);
+  --color-page: var(--neutral-050);
+  --color-surface: var(--cream);
+  --color-surface-muted: var(--green-050);
+  --color-text: var(--neutral-900);
+  --color-text-strong: var(--neutral-700);
+  --color-text-muted: var(--neutral-500);
+  --color-text-subtle: var(--neutral-400);
+  --color-text-on-brand: var(--cream);
+  --color-border: var(--neutral-200);
+  --color-border-strong: var(--neutral-300);
+  --color-warning: var(--amber-500);
+  --color-warning-surface: var(--amber-200);
+  --color-warning-text: var(--amber-700);
+  --color-danger: var(--red-700);
+  --color-danger-surface: var(--red-100);
+  --color-focus: var(--amber-500);
+  --color-photo-surface: var(--neutral-100);
+  --color-photo-silhouette: var(--neutral-300);
+  --color-overlay: rgb(13 20 16 / 68%);
+
+  --button-primary-bg: var(--color-brand);
+  --button-primary-border: var(--color-brand);
+  --button-primary-text: var(--color-text-on-brand);
+
+  --content-wide: 68rem;
+  --content-flow: 52rem;
+  --control-height: 2.75rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 2rem;
+  --space-8: 3rem;
+
+  --radius-sm: 0.35rem;
+  --radius-md: 0.65rem;
+  --radius-lg: 1rem;
+
+  --shadow-card: 0 0.18rem 0 color-mix(in srgb, var(--color-border) 90%, transparent);
+  --shadow-panel: 0 0.8rem 2rem rgb(26 39 31 / 22%);
+  --shadow-dialog: 0 1.5rem 5rem rgb(14 23 18 / 35%);
+
+  --font-family-sans:
+    "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", ui-sans-serif,
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-xs: 0.72rem;
+  --font-size-sm: 0.86rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+  --font-size-display: 2.5rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+  --font-weight-extra-bold: 800;
+  --line-height-tight: 1.2;
+  --line-height-base: 1.55;
+
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.on-dark {
+  --button-primary-bg: var(--color-brand-soft);
+  --button-primary-border: var(--color-brand-soft);
+  --button-primary-text: var(--color-brand-strong);
+}

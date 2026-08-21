@@ -4,6 +4,8 @@ import type { FederativeUnit } from "../../election/types.ts";
 import { STATE_NAMES, STATE_OPTIONS } from "../../location/states.ts";
 import type { ApplicationState } from "../state.ts";
 import { locationLabel } from "../state.ts";
+import { CheckIcon, MapPinIcon } from "./Icon.tsx";
+import { SelectField } from "./SelectField.tsx";
 
 interface LocationPickerProps {
   state: ApplicationState;
@@ -46,6 +48,7 @@ function GeolocationOption({
         aria-describedby="geolocation-privacy"
         onClick={onRequestLocation}
       >
+        <MapPinIcon />
         {state.locationDetectionStatus === "requesting"
           ? "Obtendo localização…"
           : "Usar minha localização"}
@@ -66,6 +69,7 @@ function GeolocationOption({
               class="primary-button"
               onClick={onConfirmSuggestion}
             >
+              <CheckIcon />
               Confirmar {state.suggestedUf}
             </button>
             <button
@@ -115,22 +119,25 @@ function LocationForm(props: LocationPickerProps) {
         Em 2026, apenas a UF do seu domicílio eleitoral é necessária.
       </p>
       <div class="location-controls">
-        <select
-          id="voting-state"
-          name="uf"
-          required
-          aria-describedby="voting-state-hint"
-          value={selectedUf}
-          onChange={(event) => setSelectedUf(event.currentTarget.value)}
-        >
-          <option value="">Selecione a UF</option>
-          {STATE_OPTIONS.map((option) => (
-            <option key={option.uf} value={option.uf}>
-              {option.name} ({option.uf})
-            </option>
-          ))}
-        </select>
+        <SelectField>
+          <select
+            id="voting-state"
+            name="uf"
+            required
+            aria-describedby="voting-state-hint"
+            value={selectedUf}
+            onChange={(event) => setSelectedUf(event.currentTarget.value)}
+          >
+            <option value="">Selecione a UF</option>
+            {STATE_OPTIONS.map((option) => (
+              <option key={option.uf} value={option.uf}>
+                {option.name} ({option.uf})
+              </option>
+            ))}
+          </select>
+        </SelectField>
         <button type="submit" class="primary-button">
+          <CheckIcon />
           {currentUf ? "Alterar UF" : "Confirmar UF"}
         </button>
       </div>

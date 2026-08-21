@@ -2,6 +2,7 @@ import { CANDIDATE_DATASET_KIND } from "../../candidates/index.ts";
 import { electionCalendar } from "../../election/calendar.ts";
 import type { ElectionConfig } from "../../election/types.ts";
 import type { ApplicationState } from "../state.ts";
+import { ExternalLinkIcon } from "./Icon.tsx";
 
 function formatSnapshotDate(value: string): string {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -38,7 +39,7 @@ function DataSource({ state }: { state: ApplicationState }) {
     <p class="data-source">
       Fonte:{" "}
       <a href={state.metadata.sourceUrl} target="_blank" rel="noopener noreferrer">
-        {state.metadata.provider}
+        {state.metadata.provider} <ExternalLinkIcon />
       </a>{" "}
       · {state.metadata.dataset} · dados gerados em{" "}
       <time dateTime={state.metadata.sourceGeneratedAt}>

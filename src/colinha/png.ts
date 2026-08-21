@@ -1,4 +1,6 @@
 import { publicPath } from "../shared/paths.ts";
+import { PNG_PALETTE } from "../shared/palette.ts";
+import { PHOTO_PLACEHOLDER_SHAPE } from "../shared/photo-placeholder.ts";
 import { VOTE_CHOICE_TYPE } from "../election/types.ts";
 import { calculateColinhaLayout, type Rectangle } from "./layout.ts";
 import type { ColinhaModel, ColinhaRow } from "./model.ts";
@@ -85,29 +87,31 @@ function drawMissingPhoto(
   context: CanvasRenderingContext2D,
   rectangle: Rectangle,
 ): void {
-  fillRoundedRectangle(context, rectangle, 12, "#e5e3da");
-  context.fillStyle = "#a3b0a7";
+  fillRoundedRectangle(context, rectangle, 12, PNG_PALETTE.photoSurface);
+  context.fillStyle = PNG_PALETTE.photoSilhouette;
+  const scaleX = rectangle.width / PHOTO_PLACEHOLDER_SHAPE.viewBox.width;
+  const scaleY = rectangle.height / PHOTO_PLACEHOLDER_SHAPE.viewBox.height;
   context.beginPath();
   context.arc(
-    rectangle.x + rectangle.width / 2,
-    rectangle.y + 48,
-    25,
+    rectangle.x + PHOTO_PLACEHOLDER_SHAPE.head.cx * scaleX,
+    rectangle.y + PHOTO_PLACEHOLDER_SHAPE.head.cy * scaleY,
+    PHOTO_PLACEHOLDER_SHAPE.head.radius * Math.min(scaleX, scaleY),
     0,
     Math.PI * 2,
   );
   context.fill();
   context.beginPath();
   context.ellipse(
-    rectangle.x + rectangle.width / 2,
-    rectangle.y + 112,
-    42,
-    48,
+    rectangle.x + PHOTO_PLACEHOLDER_SHAPE.shoulders.cx * scaleX,
+    rectangle.y + PHOTO_PLACEHOLDER_SHAPE.shoulders.cy * scaleY,
+    PHOTO_PLACEHOLDER_SHAPE.shoulders.radiusX * scaleX,
+    PHOTO_PLACEHOLDER_SHAPE.shoulders.radiusY * scaleY,
     0,
     Math.PI,
     Math.PI * 2,
   );
   context.fill();
-  context.fillStyle = "#536057";
+  context.fillStyle = PNG_PALETTE.textMuted;
   context.font = "700 16px system-ui, sans-serif";
   context.textAlign = "center";
   context.fillText(
@@ -123,11 +127,11 @@ function drawHeader(
   rectangle: Rectangle,
   model: ColinhaModel,
 ): void {
-  fillRoundedRectangle(context, rectangle, 24, "#173f2d");
-  context.fillStyle = "#fffdf7";
+  fillRoundedRectangle(context, rectangle, 24, PNG_PALETTE.brand);
+  context.fillStyle = PNG_PALETTE.surface;
   context.font = "800 50px system-ui, sans-serif";
   context.fillText(model.title, rectangle.x + 36, rectangle.y + 68);
-  context.fillStyle = "#dbe9df";
+  context.fillStyle = PNG_PALETTE.brandSoft;
   context.font = "600 28px system-ui, sans-serif";
   context.fillText(
     fitText(context, model.electionLocationLabel, rectangle.width - 72),
@@ -147,8 +151,8 @@ function drawNotice(
   rectangle: Rectangle,
   notice: string,
 ): void {
-  fillRoundedRectangle(context, rectangle, 14, "#ffe3ad");
-  context.fillStyle = "#4c321c";
+  fillRoundedRectangle(context, rectangle, 14, PNG_PALETTE.warningSurface);
+  context.fillStyle = PNG_PALETTE.warningText;
   context.font = "800 23px system-ui, sans-serif";
   context.textAlign = "center";
   context.fillText(
@@ -165,23 +169,23 @@ function drawRow(
   row: ColinhaRow,
   photo: LoadedPhoto,
 ): void {
-  fillRoundedRectangle(context, rectangle, 20, "#fffef9");
-  context.strokeStyle = "#cbd2cb";
+  fillRoundedRectangle(context, rectangle, 20, PNG_PALETTE.surface);
+  context.strokeStyle = PNG_PALETTE.border;
   context.lineWidth = 2;
   roundedRectangle(context, rectangle, 20);
   context.stroke();
 
-  context.fillStyle = "#dbe9df";
+  context.fillStyle = PNG_PALETTE.brandSoft;
   context.beginPath();
   context.arc(rectangle.x + 38, rectangle.y + 38, 22, 0, Math.PI * 2);
   context.fill();
-  context.fillStyle = "#173f2d";
+  context.fillStyle = PNG_PALETTE.brand;
   context.font = "800 22px system-ui, sans-serif";
   context.textAlign = "center";
   context.fillText(String(row.order), rectangle.x + 38, rectangle.y + 46);
   context.textAlign = "start";
 
-  context.fillStyle = "#26352d";
+  context.fillStyle = PNG_PALETTE.textStrong;
   context.font = "800 27px system-ui, sans-serif";
   context.fillText(
     fitText(context, row.officeLabel, rectangle.width - 116),
@@ -190,7 +194,7 @@ function drawRow(
   );
 
   if (!row.choice) {
-    context.fillStyle = "#69736d";
+    context.fillStyle = PNG_PALETTE.textSubtle;
     context.font = "600 32px system-ui, sans-serif";
     context.fillText("Não preenchido", rectangle.x + 78, rectangle.y + 137);
     return;
@@ -200,7 +204,7 @@ function drawRow(
     row.choice.type === VOTE_CHOICE_TYPE.BLANK ||
     row.choice.type === VOTE_CHOICE_TYPE.NULL
   ) {
-    context.fillStyle = "#173f2d";
+    context.fillStyle = PNG_PALETTE.brand;
     context.font = "900 52px system-ui, sans-serif";
     context.fillText(
       row.choice.type === VOTE_CHOICE_TYPE.BLANK ? "BRANCO" : "NULO",
@@ -212,13 +216,13 @@ function drawRow(
 
   if (row.choice.type === VOTE_CHOICE_TYPE.PARTY) {
     const textX = rectangle.x + 78;
-    context.fillStyle = "#123b27";
+    context.fillStyle = PNG_PALETTE.brandStrong;
     context.font = "900 76px system-ui, sans-serif";
     context.fillText(row.choice.partyNumber, textX, rectangle.y + 135);
-    context.fillStyle = "#18231d";
+    context.fillStyle = PNG_PALETTE.text;
     context.font = "800 31px system-ui, sans-serif";
     context.fillText(row.choice.party, textX, rectangle.y + 178);
-    context.fillStyle = "#536057";
+    context.fillStyle = PNG_PALETTE.textMuted;
     context.font = "700 22px system-ui, sans-serif";
     context.fillText("VOTO DE LEGENDA", textX, rectangle.y + 214);
     return;
@@ -237,21 +241,21 @@ function drawRow(
   }
 
   const textX = rectangle.x + 176;
-  context.fillStyle = "#123b27";
+  context.fillStyle = PNG_PALETTE.brandStrong;
   context.font = "900 76px system-ui, sans-serif";
   context.fillText(row.choice.number, textX, rectangle.y + 133);
-  context.fillStyle = "#18231d";
+  context.fillStyle = PNG_PALETTE.text;
   context.font = "800 31px system-ui, sans-serif";
   context.fillText(
     fitText(context, row.choice.ballotName, rectangle.width - 210),
     textX,
     rectangle.y + 174,
   );
-  context.fillStyle = "#536057";
+  context.fillStyle = PNG_PALETTE.textMuted;
   context.font = "600 24px system-ui, sans-serif";
   context.fillText(row.choice.party, textX, rectangle.y + 204);
   if (row.choice.pendingOrAmbiguous) {
-    context.fillStyle = "#785513";
+    context.fillStyle = PNG_PALETTE.warningText;
     context.font = "700 19px system-ui, sans-serif";
     context.fillText(
       "Situação ainda não definitiva",
@@ -266,7 +270,7 @@ function drawFooter(
   rectangle: Rectangle,
   label: string,
 ): void {
-  context.fillStyle = "#536057";
+  context.fillStyle = PNG_PALETTE.textMuted;
   context.font = "600 21px system-ui, sans-serif";
   context.textAlign = "center";
   context.fillText(
@@ -338,7 +342,7 @@ export async function generateColinhaPng(model: ColinhaModel): Promise<Blob> {
 
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-  context.fillStyle = "#f4f3ed";
+  context.fillStyle = PNG_PALETTE.page;
   context.fillRect(0, 0, layout.width, layout.height);
   drawHeader(context, layout.header, model);
   if (layout.notice && model.notice) {

@@ -18,6 +18,8 @@ import {
 } from "../candidate-panel.ts";
 import { searchInputId } from "../state.ts";
 import { CandidateDetails, CandidatePhoto } from "./CandidatePresentation.tsx";
+import { SearchIcon } from "./Icon.tsx";
+import { SelectField } from "./SelectField.tsx";
 
 interface CandidatePickerProps {
   slot: VotingSlot;
@@ -132,22 +134,24 @@ function AlternativeChoices({
             <summary>Votar na legenda</summary>
             <div class="party-choice-controls">
               <label for={partySelectId}>Partido</label>
-              <select
-                ref={partySelectRef}
-                id={partySelectId}
-                value={partyValue}
-                onChange={(event) => setPartyValue(event.currentTarget.value)}
-              >
-                <option value="">Selecione o partido</option>
-                {candidatePartyOptions(candidates).map((option) => (
-                  <option
-                    key={`${option.partyNumber}:${option.party}`}
-                    value={`${option.partyNumber}:${option.party}`}
-                  >
-                    {option.partyNumber} · {option.party}
-                  </option>
-                ))}
-              </select>
+              <SelectField>
+                <select
+                  ref={partySelectRef}
+                  id={partySelectId}
+                  value={partyValue}
+                  onChange={(event) => setPartyValue(event.currentTarget.value)}
+                >
+                  <option value="">Selecione o partido</option>
+                  {candidatePartyOptions(candidates).map((option) => (
+                    <option
+                      key={`${option.partyNumber}:${option.party}`}
+                      value={`${option.partyNumber}:${option.party}`}
+                    >
+                      {option.partyNumber} · {option.party}
+                    </option>
+                  ))}
+                </select>
+              </SelectField>
               <button
                 type="button"
                 class="secondary-button"
@@ -255,61 +259,66 @@ export function CandidatePicker({
             <label class="search-label" for={inputId}>
               Buscar nome ou número
             </label>
-            <input
-              ref={inputRef}
-              id={inputId}
-              class="candidate-search"
-              type="search"
-              placeholder="Nome de urna ou número"
-              autocomplete="off"
-              enterKeyHint="search"
-              role="combobox"
-              aria-autocomplete="list"
-              aria-expanded={panelState.open}
-              aria-controls={resultsId}
-              value={query}
-              onFocus={() => {
-                if (!suppressFocusOpen.current) setOpen(true);
-              }}
-              onClick={() => setOpen(true)}
-              onInput={(event) => {
-                setQuery(event.currentTarget.value);
-                applyFilter();
-              }}
-              onKeyDown={(event) => {
-                if (event.key !== "ArrowDown") return;
-                event.preventDefault();
-                setOpen(true);
-                requestAnimationFrame(() =>
-                  resultsRef.current
-                    ?.querySelector<HTMLButtonElement>(".candidate-card")
-                    ?.focus(),
-                );
-              }}
-            />
+            <span class="search-field">
+              <SearchIcon />
+              <input
+                ref={inputRef}
+                id={inputId}
+                class="candidate-search"
+                type="search"
+                placeholder="Nome de urna ou número"
+                autocomplete="off"
+                enterKeyHint="search"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={panelState.open}
+                aria-controls={resultsId}
+                value={query}
+                onFocus={() => {
+                  if (!suppressFocusOpen.current) setOpen(true);
+                }}
+                onClick={() => setOpen(true)}
+                onInput={(event) => {
+                  setQuery(event.currentTarget.value);
+                  applyFilter();
+                }}
+                onKeyDown={(event) => {
+                  if (event.key !== "ArrowDown") return;
+                  event.preventDefault();
+                  setOpen(true);
+                  requestAnimationFrame(() =>
+                    resultsRef.current
+                      ?.querySelector<HTMLButtonElement>(".candidate-card")
+                      ?.focus(),
+                  );
+                }}
+              />
+            </span>
           </div>
           <div class="candidate-filter-field party-filter-field">
             <label class="party-filter-label" for={partyFilterId}>
               Partido
             </label>
-            <select
-              id={partyFilterId}
-              class="party-filter"
-              value={party}
-              onFocus={() => setOpen(true)}
-              onClick={() => setOpen(true)}
-              onChange={(event) => {
-                setParty(event.currentTarget.value);
-                applyFilter();
-              }}
-            >
-              <option value="">Todos os partidos</option>
-              {candidatePartyOptions(candidates).map((option) => (
-                <option key={option.party} value={option.party}>
-                  {option.party}
-                </option>
-              ))}
-            </select>
+            <SelectField>
+              <select
+                id={partyFilterId}
+                class="party-filter"
+                value={party}
+                onFocus={() => setOpen(true)}
+                onClick={() => setOpen(true)}
+                onChange={(event) => {
+                  setParty(event.currentTarget.value);
+                  applyFilter();
+                }}
+              >
+                <option value="">Todos os partidos</option>
+                {candidatePartyOptions(candidates).map((option) => (
+                  <option key={option.party} value={option.party}>
+                    {option.party}
+                  </option>
+                ))}
+              </select>
+            </SelectField>
           </div>
         </div>
         <div

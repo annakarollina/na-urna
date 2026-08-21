@@ -7,6 +7,7 @@ import type { ApplicationState } from "../state.ts";
 import { selectedCandidate, selectedChoice } from "../state.ts";
 import { CandidatePicker } from "./CandidatePicker.tsx";
 import { SelectedChoice } from "./CandidatePresentation.tsx";
+import { RefreshCwIcon } from "./Icon.tsx";
 
 export function VotingSlot({
   slot,
@@ -59,6 +60,7 @@ export function VotingSlot({
             class="secondary-button retry-button"
             onClick={onRetry}
           >
+            <RefreshCwIcon />
             Tentar novamente
           </button>
         </>
