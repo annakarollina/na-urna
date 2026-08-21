@@ -4,7 +4,7 @@ import type { FederativeUnit } from "../../election/types.ts";
 import { STATE_NAMES, STATE_OPTIONS } from "../../location/states.ts";
 import type { ApplicationState } from "../state.ts";
 import { locationLabel } from "../state.ts";
-import { CheckIcon, MapPinIcon } from "./Icon.tsx";
+import { CheckIcon, MapPinIcon, RefreshCwIcon } from "./Icon.tsx";
 import { SelectField } from "./SelectField.tsx";
 
 interface LocationPickerProps {
@@ -36,11 +36,6 @@ function GeolocationOption({
       tabIndex={-1}
       aria-live="polite"
     >
-      <p class="optional-label">Opcional</p>
-      <p class="geolocation-description">
-        Se preferir, o navegador pode sugerir sua UF. A seleção manual acima
-        continua disponível.
-      </p>
       <button
         type="button"
         class="secondary-button geolocation-button"
@@ -54,8 +49,8 @@ function GeolocationOption({
           : "Usar minha localização"}
       </button>
       <p id="geolocation-privacy" class="geolocation-privacy">
-        As coordenadas são comparadas localmente com limites do IBGE, não são
-        enviadas a serviços externos e não são armazenadas.
+        Opcional e privado: a comparação com limites do IBGE acontece neste
+        dispositivo.
       </p>
       {state.locationDetectionStatus === "suggested" && state.suggestedUf ? (
         <div class="location-suggestion">
@@ -114,17 +109,15 @@ function LocationForm(props: LocationPickerProps) {
         }
       }}
     >
-      <label for="voting-state">Selecione sua UF</label>
-      <p id="voting-state-hint" class="field-hint">
-        Em 2026, apenas a UF do seu domicílio eleitoral é necessária.
-      </p>
+      <label class="sr-only" for="voting-state">
+        Selecione sua UF
+      </label>
       <div class="location-controls">
         <SelectField>
           <select
             id="voting-state"
             name="uf"
             required
-            aria-describedby="voting-state-hint"
             value={selectedUf}
             onChange={(event) => setSelectedUf(event.currentTarget.value)}
           >
@@ -165,13 +158,16 @@ export function LocationPicker(props: LocationPickerProps) {
       {props.state.session && !props.state.locationEditing ? (
         <div class="location-summary">
           <strong class="location-summary-value">
-            {locationLabel(props.state.session.location)}
+            {props.state.session.location.scope === "STATE"
+              ? `${STATE_NAMES[props.state.session.location.uf]} — ${props.state.session.location.uf}`
+              : locationLabel(props.state.session.location)}
           </strong>
           <button
             type="button"
             class="text-button location-change"
             onClick={props.onEdit}
           >
+            <RefreshCwIcon />
             Alterar
           </button>
         </div>

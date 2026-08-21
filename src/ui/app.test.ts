@@ -67,9 +67,6 @@ function ensureBrowserShims(): void {
         dispatchEvent: () => false,
       }) as unknown as MediaQueryList) as typeof window.matchMedia;
   }
-  if (typeof Element.prototype.scrollIntoView !== "function") {
-    Element.prototype.scrollIntoView = () => undefined;
-  }
   if (typeof window.requestAnimationFrame !== "function") {
     window.requestAnimationFrame = (callback: FrameRequestCallback): number =>
       window.setTimeout(() => callback(Date.now()), 0) as unknown as number;

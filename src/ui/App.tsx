@@ -366,120 +366,122 @@ function ConfiguredApplication({
       />
       <main class="page" id="conteudo">
         <ElectionContext state={state} />
-        <LocationPicker
-          state={state}
-          onSelectState={(uf) => {
-            if (!canApplyStateChoice(uf)) return false;
-            resetLocationDetection(state);
-            selectState(uf);
-            return true;
-          }}
-          onKeepCurrent={() => {
-            resetLocationDetection(state);
-            state.locationEditing = false;
-            refresh();
-          }}
-          onEdit={() => {
-            state.locationEditing = true;
-            state.announcement = "Seleção de UF aberta para alteração.";
-            refresh();
-            focusAfterRender("voting-state");
-          }}
-          onRequestLocation={() => void requestLocationSuggestion()}
-          onConfirmSuggestion={() => {
-            const suggestedUf = state.suggestedUf;
-            if (!suggestedUf || !canApplyStateChoice(suggestedUf)) return;
-            const currentUf =
-              state.session?.location.scope === TERRITORIAL_SCOPE.STATE
-                ? state.session.location.uf
-                : undefined;
-            resetLocationDetection(state);
-            if (currentUf === suggestedUf) {
+        <div class="electoral-flow">
+          <LocationPicker
+            state={state}
+            onSelectState={(uf) => {
+              if (!canApplyStateChoice(uf)) return false;
+              resetLocationDetection(state);
+              selectState(uf);
+              return true;
+            }}
+            onKeepCurrent={() => {
+              resetLocationDetection(state);
               state.locationEditing = false;
-              state.announcement = `${STATE_NAMES[suggestedUf]} já é a UF selecionada.`;
               refresh();
-            } else {
-              selectState(suggestedUf);
-            }
-          }}
-          onRejectSuggestion={() => {
-            resetLocationDetection(state);
-            state.announcement = "Sugestão descartada. Escolha sua UF manualmente.";
-            refresh();
-            focusAfterRender("voting-state");
-          }}
-        />
-        {state.session ? (
-          <>
-            <div class="slots-header">
-              <h2 id="choices-title" tabIndex={-1}>
-                Monte suas escolhas
-              </h2>
-              <p>
-                {locationLabel(state.session.location)} · {state.session.slots.length}{" "}
-                posições na ordem de votação
-              </p>
-              <p class="choices-count">
-                {selectionCount(state.session)} de {state.session.slots.length}{" "}
-                preenchidas
-              </p>
-              <progress
-                class="selection-progress compact-progress"
-                max={state.session.slots.length}
-                value={selectionCount(state.session)}
-                aria-label={`${selectionCount(state.session)} de ${state.session.slots.length} escolhas preenchidas`}
-              />
-            </div>
-            <div class="slots">
-              {state.session.slots.map((slot) => (
-                <VotingSlot
-                  key={slot.id}
-                  slot={slot}
-                  state={state}
-                  onChange={() => {
-                    state.choosingSlots = new Set(state.choosingSlots).add(slot.id);
-                    refresh();
-                    focusAfterRender(searchInputId(slot));
-                  }}
-                  onSelect={(candidate) => chooseCandidate(slot, candidate)}
-                  onNonCandidate={(choice, label) =>
-                    chooseNonCandidate(slot, choice, label)
-                  }
-                  onRetry={() => void loadCurrentCandidates(false)}
+            }}
+            onEdit={() => {
+              state.locationEditing = true;
+              state.announcement = "Seleção de UF aberta para alteração.";
+              refresh();
+              focusAfterRender("voting-state");
+            }}
+            onRequestLocation={() => void requestLocationSuggestion()}
+            onConfirmSuggestion={() => {
+              const suggestedUf = state.suggestedUf;
+              if (!suggestedUf || !canApplyStateChoice(suggestedUf)) return;
+              const currentUf =
+                state.session?.location.scope === TERRITORIAL_SCOPE.STATE
+                  ? state.session.location.uf
+                  : undefined;
+              resetLocationDetection(state);
+              if (currentUf === suggestedUf) {
+                state.locationEditing = false;
+                state.announcement = `${STATE_NAMES[suggestedUf]} já é a UF selecionada.`;
+                refresh();
+              } else {
+                selectState(suggestedUf);
+              }
+            }}
+            onRejectSuggestion={() => {
+              resetLocationDetection(state);
+              state.announcement = "Sugestão descartada. Escolha sua UF manualmente.";
+              refresh();
+              focusAfterRender("voting-state");
+            }}
+          />
+          {state.session ? (
+            <>
+              <div class="slots-header">
+                <h2 id="choices-title" tabIndex={-1}>
+                  Monte suas escolhas
+                </h2>
+                <p>
+                  {locationLabel(state.session.location)} ·{" "}
+                  {state.session.slots.length} posições na ordem de votação
+                </p>
+                <p class="choices-count">
+                  {selectionCount(state.session)} de {state.session.slots.length}{" "}
+                  preenchidas
+                </p>
+                <progress
+                  class="selection-progress compact-progress"
+                  max={state.session.slots.length}
+                  value={selectionCount(state.session)}
+                  aria-label={`${selectionCount(state.session)} de ${state.session.slots.length} escolhas preenchidas`}
                 />
-              ))}
-            </div>
-            <Review
-              state={state}
-              onEditSlot={(slot) => {
-                state.choosingSlots = new Set(state.choosingSlots).add(slot.id);
-                refresh();
-                focusAfterRender(searchInputId(slot));
-              }}
-              onToggleOnlyFilled={(checked) => {
-                state.exportOnlyFilled = checked;
-                invalidateExport(state);
-                state.announcement = checked
-                  ? "A imagem mostrará somente as escolhas preenchidas."
-                  : "A imagem também mostrará as posições não preenchidas.";
-                refresh();
-                focusAfterRender("export-only-filled");
-              }}
-              onDownload={() => void generateExport("download")}
-              onShare={sharePreparedExport}
-              onFallbackDownload={(fallbackUrl) => {
-                state.announcement = "Download da colinha iniciado.";
-                window.setTimeout(() => {
-                  if (state.exportUrl !== fallbackUrl) return;
-                  URL.revokeObjectURL(fallbackUrl);
-                  state.exportUrl = null;
-                  state.exportStatus = "idle";
+              </div>
+              <div class="slots">
+                {state.session.slots.map((slot) => (
+                  <VotingSlot
+                    key={slot.id}
+                    slot={slot}
+                    state={state}
+                    onChange={() => {
+                      state.choosingSlots = new Set(state.choosingSlots).add(slot.id);
+                      refresh();
+                      focusAfterRender(searchInputId(slot));
+                    }}
+                    onSelect={(candidate) => chooseCandidate(slot, candidate)}
+                    onNonCandidate={(choice, label) =>
+                      chooseNonCandidate(slot, choice, label)
+                    }
+                    onRetry={() => void loadCurrentCandidates(false)}
+                  />
+                ))}
+              </div>
+              <Review
+                state={state}
+                onEditSlot={(slot) => {
+                  state.choosingSlots = new Set(state.choosingSlots).add(slot.id);
                   refresh();
-                }, 1_000);
-              }}
-            />
-          </>
-        ) : null}
+                  focusAfterRender(searchInputId(slot));
+                }}
+                onToggleOnlyFilled={(checked) => {
+                  state.exportOnlyFilled = checked;
+                  invalidateExport(state);
+                  state.announcement = checked
+                    ? "A imagem mostrará somente as escolhas preenchidas."
+                    : "A imagem também mostrará as posições não preenchidas.";
+                  refresh();
+                  focusAfterRender("export-only-filled");
+                }}
+                onDownload={() => void generateExport("download")}
+                onShare={sharePreparedExport}
+                onFallbackDownload={(fallbackUrl) => {
+                  state.announcement = "Download da colinha iniciado.";
+                  window.setTimeout(() => {
+                    if (state.exportUrl !== fallbackUrl) return;
+                    URL.revokeObjectURL(fallbackUrl);
+                    state.exportUrl = null;
+                    state.exportStatus = "idle";
+                    refresh();
+                  }, 1_000);
+                }}
+              />
+            </>
+          ) : null}
+        </div>
       </main>
       <Footer />
       <p class="sr-only" aria-live="polite">

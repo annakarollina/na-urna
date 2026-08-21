@@ -238,7 +238,7 @@ h1 {
 }
 
 .location-section {
-  max-width: 46rem;
+  width: 100%;
   margin-bottom: 2.75rem;
   padding: 1.25rem;
   border: 1px solid var(--color-border);
@@ -266,7 +266,6 @@ h1 {
 
 .location-section.location-section-confirmed {
   width: 100%;
-  max-width: 54rem;
   padding-block: 0.9rem;
 }
 
@@ -310,9 +309,10 @@ h1 {
 }
 
 .geolocation-option {
-  margin-top: 1.25rem;
-  padding-top: 1.1rem;
-  border-top: 1px solid var(--color-border);
+  display: grid;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  margin-top: var(--space-3);
 }
 
 .optional-label {
@@ -324,24 +324,18 @@ h1 {
   text-transform: uppercase;
 }
 
-.geolocation-description,
 .geolocation-privacy {
   color: var(--color-text-muted);
   line-height: 1.45;
 }
 
-.geolocation-description {
-  margin-bottom: 0.75rem;
-  font-size: 0.9rem;
-}
-
 .geolocation-button {
-  min-height: 2.75rem;
+  justify-self: start;
   padding: 0.65rem 1rem;
 }
 
 .geolocation-privacy {
-  margin: 0.65rem 0 0;
+  margin: 0;
   font-size: 0.76rem;
 }
 
@@ -579,7 +573,7 @@ select {
 }
 
 .compact-progress {
-  max-width: 46rem;
+  width: 100%;
   height: 0.55rem;
   margin: 0.75rem 0 0;
   accent-color: var(--color-brand-hover);
@@ -611,12 +605,15 @@ progress::-moz-progress-bar {
 }
 
 .slot {
+  display: grid;
   min-width: 0;
+  min-block-size: 16rem;
   padding: 1.25rem;
   border: 1px solid var(--color-border);
   border-radius: 0.85rem;
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
+  grid-template-rows: auto 1fr auto;
 }
 
 .slot[data-office="SENATOR"] {
@@ -631,6 +628,18 @@ progress::-moz-progress-bar {
   margin-bottom: 1.25rem;
   font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.55rem);
   letter-spacing: -0.015em;
+}
+
+.slot-main {
+  min-width: 0;
+}
+
+.slot-actions {
+  min-width: 0;
+}
+
+.slot-actions:empty {
+  display: none;
 }
 
 .selected-candidate,
@@ -895,7 +904,7 @@ progress::-moz-progress-bar {
 }
 
 .retry-button {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
   padding-inline: 1rem;
 }
 
@@ -1216,11 +1225,31 @@ progress::-moz-progress-bar {
 }
 
 .site-footer {
+  display: grid;
+  gap: var(--space-1);
   padding-block: 1.75rem;
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
   font-size: 0.875rem;
   line-height: 1.5;
+}
+
+.footer-brand {
+  color: var(--color-brand);
+  font-size: var(--font-size-md);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.footer-links a {
+  color: var(--color-brand-strong);
+  font-weight: var(--font-weight-bold);
+  text-underline-offset: 0.18em;
 }
 
 @keyframes spin {
@@ -1236,6 +1265,15 @@ progress::-moz-progress-bar {
 
   .location-controls {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .geolocation-option {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+
+  .location-suggestion,
+  .geolocation-error {
+    grid-column: 1 / -1;
   }
 
   .candidate-filters {
@@ -1296,10 +1334,6 @@ progress::-moz-progress-bar {
   .location-section,
   .slot {
     padding: 1.6rem;
-  }
-
-  .slots {
-    max-width: 54rem;
   }
 
   .review-item {

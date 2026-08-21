@@ -10,3 +10,8 @@
   width: min(100% - 2rem, var(--content-wide));
   margin-inline: auto;
 }
+
+.electoral-flow {
+  width: min(100%, var(--content-flow));
+  margin-inline: auto;
+}

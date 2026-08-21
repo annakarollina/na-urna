@@ -69,7 +69,9 @@ export function AboutDialog({
       aria-labelledby="about-title"
       onClose={() => {
         onClose();
-        requestAnimationFrame(() => document.getElementById("about-button")?.focus());
+        requestAnimationFrame(() =>
+          document.getElementById("about-button")?.focus({ preventScroll: true }),
+        );
       }}
       onCancel={onClose}
     >
@@ -133,8 +135,33 @@ export function AboutDialog({
 export function Footer() {
   return (
     <footer class="site-footer">
-      Projeto independente e open source. Não é um site oficial da Justiça
-      Eleitoral.
+      <strong class="footer-brand">Minha Colinha</strong>
+      <span>Projeto independente e open source.</span>
+      <nav class="footer-links" aria-label="Informações do projeto">
+        <a
+          href="https://github.com/PredoCampos/minha-colinha"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          GitHub
+        </a>
+        <span aria-hidden="true">·</span>
+        <a
+          href="https://dadosabertos.tse.jus.br/dataset/candidatos-2026"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Dados oficiais — TSE
+        </a>
+        <span aria-hidden="true">·</span>
+        <a
+          href="https://github.com/PredoCampos/minha-colinha/blob/main/LICENSE"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Licença MIT
+        </a>
+      </nav>
     </footer>
   );
 }

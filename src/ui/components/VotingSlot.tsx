@@ -40,6 +40,7 @@ export function VotingSlot({
     ) : null;
 
   let content;
+  let actions = null;
   if (state.loading) {
     content = (
       <p class="loading-state" role="status">
@@ -51,19 +52,19 @@ export function VotingSlot({
     const file = state.files.get(slot.office);
     if (loadError) {
       content = (
-        <>
-          <p class="error-state" role="alert">
-            {loadError.message}
-          </p>
-          <button
-            type="button"
-            class="secondary-button retry-button"
-            onClick={onRetry}
-          >
-            <RefreshCwIcon />
-            Tentar novamente
-          </button>
-        </>
+        <p class="error-state" role="alert">
+          {loadError.message}
+        </p>
+      );
+      actions = (
+        <button
+          type="button"
+          class="secondary-button retry-button"
+          onClick={onRetry}
+        >
+          <RefreshCwIcon />
+          Tentar novamente
+        </button>
       );
     } else if (!file) {
       content = (
@@ -99,15 +100,20 @@ export function VotingSlot({
       data-office={slot.office}
       aria-labelledby={`slot-title-${slot.order}`}
     >
-      <h2
-        id={`slot-title-${slot.order}`}
-        class="slot-title"
-        tabIndex={-1}
-      >
-        {slot.label}
-      </h2>
-      {selected}
-      {content}
+      <header class="slot-header">
+        <h2
+          id={`slot-title-${slot.order}`}
+          class="slot-title"
+          tabIndex={-1}
+        >
+          {slot.label}
+        </h2>
+      </header>
+      <div class="slot-main">
+        {selected}
+        {content}
+      </div>
+      <footer class="slot-actions">{actions}</footer>
     </section>
   );
 }

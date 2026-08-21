@@ -159,7 +159,7 @@ function AlternativeChoices({
                   const [partyNumber, ...partyParts] = partyValue.split(":");
                   const party = partyParts.join(":");
                   if (!/^\d{2}$/.test(partyNumber ?? "") || party.length === 0) {
-                    partySelectRef.current?.focus();
+                    partySelectRef.current?.focus({ preventScroll: true });
                     return;
                   }
                   onNonCandidate(
@@ -249,7 +249,7 @@ export function CandidatePicker({
           setOpen(false);
           if (document.activeElement !== inputRef.current) {
             suppressFocusOpen.current = true;
-            inputRef.current?.focus();
+            inputRef.current?.focus({ preventScroll: true });
             suppressFocusOpen.current = false;
           }
         }}

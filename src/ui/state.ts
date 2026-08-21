@@ -128,13 +128,7 @@ export function searchInputId(slot: VotingSlot): string {
 export function focusAfterRender(id: string): void {
   requestAnimationFrame(() => {
     const target = document.getElementById(id);
-    target?.focus();
-    target?.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-      block: "center",
-    });
+    target?.focus({ preventScroll: true });
   });
 }
 

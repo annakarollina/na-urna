@@ -54,6 +54,19 @@ async function prepareVisualSnapshot(page: Page): Promise<void> {
   });
 }
 
+async function expectActionToPreserveScroll(
+  page: Page,
+  action: () => Promise<void>,
+): Promise<void> {
+  const before = await page.evaluate(() => window.scrollY);
+  await action();
+  await expect
+    .poll(async () =>
+      Math.abs((await page.evaluate(() => window.scrollY)) - before),
+    )
+    .toBeLessThanOrEqual(2);
+}
+
 test("a página monta e mantém o scroll normal", async ({ page, browserName }) => {
   await openApplication(page);
   await selectSaoPaulo(page);
@@ -128,7 +141,47 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
   ).toBeEnabled();
 });
 
-test("baseline visual das telas principais", async ({ page, browserName }) => {
+test("ações de escolha preservam a posição da página", async ({ page }) => {
+  await openApplication(page);
+  await selectSaoPaulo(page);
+
+  const slot = page.getByRole("region", { name: "Deputado Federal" });
+  await slot.evaluate((element) => {
+    const top = element.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, Math.max(0, top - 96));
+  });
+
+  await slot.getByRole("combobox", { name: "Buscar nome ou número" }).focus();
+  await expectActionToPreserveScroll(page, async () => {
+    await page
+      .getByRole("button", {
+        name: "Selecionar EXEMPLO FEDERAL A, número 1010, partido EXM",
+      })
+      .click();
+    await expect(slot.getByText("EXEMPLO FEDERAL A", { exact: true })).toBeVisible();
+  });
+
+  await expectActionToPreserveScroll(page, async () => {
+    await slot.getByRole("button", { name: "Trocar" }).click();
+    await expect(
+      slot.getByRole("combobox", { name: "Buscar nome ou número" }),
+    ).toBeVisible();
+  });
+
+  await expectActionToPreserveScroll(page, async () => {
+    await slot.getByRole("button", { name: "Votar em branco" }).click();
+    await expect(slot.getByText("BRANCO", { exact: true })).toBeVisible();
+  });
+
+  await expectActionToPreserveScroll(page, async () => {
+    await slot.getByRole("button", { name: "Trocar" }).click();
+    await expect(
+      slot.getByRole("combobox", { name: "Buscar nome ou número" }),
+    ).toBeVisible();
+  });
+});
+
+test("baseline visual das telas principais", async ({ page }) => {
   test.skip(
     process.platform !== "win32",
     "Os goldens visuais da Fase 0 usam Windows como ambiente canônico.",
@@ -143,9 +196,6 @@ test("baseline visual das telas principais", async ({ page, browserName }) => {
 
   await selectSaoPaulo(page);
   await prepareVisualSnapshot(page);
-  if (browserName === "webkit") {
-    await page.getByRole("link", { name: "Ir para o conteúdo" }).focus();
-  }
   await expect(page).toHaveScreenshot("voting-flow.png", {
     fullPage: true,
     stylePath: snapshotStylePath,

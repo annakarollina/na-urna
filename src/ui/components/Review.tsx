@@ -33,12 +33,10 @@ function ExportRowPreference({
           onChange={(event) => onChange(event.currentTarget.checked)}
         />
         <span class="switch-track" aria-hidden="true" />
-        <span class="switch-text">Mostrar somente o que preenchi na imagem</span>
+        <span class="switch-text">Mostrar somente escolhas preenchidas</span>
       </label>
       <p id="export-only-filled-description" class="switch-description">
-        {state.exportOnlyFilled
-          ? "Ativado: posições sem escolha serão omitidas do PNG."
-          : "Desativado: posições sem escolha aparecerão como “Não preenchido” no PNG."}
+        Quando ativado, posições vazias não aparecem na imagem.
       </p>
     </div>
   );
