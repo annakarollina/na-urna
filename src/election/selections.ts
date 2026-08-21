@@ -134,3 +134,27 @@ export function selectVoteChoice(
     },
   };
 }
+
+export function clearVoteChoice(
+  slots: readonly VotingSlot[],
+  currentSelections: VoteSelections,
+  slotId: VotingSlotId,
+): SelectionResult {
+  const slot = slots.find((item) => item.id === slotId);
+
+  if (!slot) {
+    return {
+      ok: false,
+      error: {
+        code: "SLOT_NOT_FOUND",
+        message: "A posição de votação informada não existe nesta eleição.",
+        slotId,
+      },
+    };
+  }
+
+  const remaining = Object.fromEntries(
+    Object.entries(currentSelections).filter(([id]) => id !== slotId),
+  ) as VoteSelections;
+  return { ok: true, selections: remaining };
+}

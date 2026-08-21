@@ -10,6 +10,7 @@ import {
 } from "../../election/types.ts";
 import { PHOTO_PLACEHOLDER_SHAPE } from "../../shared/photo-placeholder.ts";
 import { publicPath } from "../../shared/paths.ts";
+import { XCircleIcon } from "./Icon.tsx";
 
 export function CandidatePhoto({ candidate }: { candidate: Candidate }) {
   const [failed, setFailed] = useState(false);
@@ -107,32 +108,42 @@ function choiceAccessibleLabel(choice: VoteChoice, candidate?: Candidate): strin
 export function SelectedChoice({
   choice,
   candidate,
-  onChange,
+  slotLabel,
+  onEdit,
+  onClear,
 }: {
   choice: VoteChoice;
   candidate: Candidate | undefined;
-  onChange: () => void;
+  slotLabel: string;
+  onEdit: () => void;
+  onClear: () => void;
 }) {
   const classes = ["selected-candidate"];
   if (choice.type !== VOTE_CHOICE_TYPE.CANDIDATE) {
     classes.push("selected-special-choice");
   }
   return (
-    <div
-      class={classes.join(" ")}
-      aria-label={`Escolha atual: ${choiceAccessibleLabel(choice, candidate)}`}
-    >
-      <ChoiceDetails choice={choice} candidate={candidate} />
-      {choice.type === VOTE_CHOICE_TYPE.CANDIDATE && candidate ? (
-        <CandidatePhoto candidate={candidate} />
-      ) : null}
-      <span class="selected-label">Escolha atual</span>
+    <div class={classes.join(" ")}>
       <button
         type="button"
-        class="secondary-button change-choice"
-        onClick={onChange}
+        class="selected-choice-trigger"
+        aria-label={`Alterar escolha de ${slotLabel}: atualmente ${choiceAccessibleLabel(choice, candidate)}`}
+        onClick={onEdit}
       >
-        Trocar
+        <ChoiceDetails choice={choice} candidate={candidate} />
+        {choice.type === VOTE_CHOICE_TYPE.CANDIDATE && candidate ? (
+          <CandidatePhoto candidate={candidate} />
+        ) : null}
+        <span class="selected-label">Escolha atual</span>
+      </button>
+      <button
+        type="button"
+        class="text-button clear-selection-button"
+        aria-label={`Esvaziar escolha de ${slotLabel}`}
+        onClick={onClear}
+      >
+        <XCircleIcon />
+        Esvaziar seleção
       </button>
     </div>
   );

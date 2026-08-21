@@ -22,6 +22,8 @@ interface CandidatePickerProps {
   slot: VotingSlot;
   candidates: readonly Candidate[];
   replacing: boolean;
+  onClose?: (() => void) | undefined;
+  closeSignal: number;
   onSelect: (candidate: Candidate) => void;
   onNonCandidate: (
     choice: NonCandidateVoteChoice,
@@ -185,6 +187,8 @@ export function CandidatePicker({
   slot,
   candidates,
   replacing,
+  onClose,
+  closeSignal,
   onSelect,
   onNonCandidate,
 }: CandidatePickerProps) {
@@ -194,6 +198,7 @@ export function CandidatePicker({
   const mobile = useMobilePicker();
   const previousMobile = useRef(mobile);
   const autoOpened = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -219,6 +224,7 @@ export function CandidatePicker({
     if (restoreFocus) {
       requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
     }
+    onClose?.();
   };
 
   useEffect(() => {
@@ -254,12 +260,7 @@ export function CandidatePicker({
     };
     const onOutsidePointer = (event: PointerEvent) => {
       if (mobile || !(event.target instanceof Node)) return;
-      if (
-        surfaceRef.current?.contains(event.target) ||
-        triggerRef.current?.contains(event.target)
-      ) {
-        return;
-      }
+      if (rootRef.current?.contains(event.target)) return;
       closePicker(true);
     };
     document.addEventListener("keydown", onKeyDown, true);
@@ -276,6 +277,10 @@ export function CandidatePicker({
     requestAnimationFrame(() => setOpen(true));
   }, [replacing]);
 
+  useEffect(() => {
+    if (open) closePicker(false);
+  }, [closeSignal]);
+
   useEffect(
     () => () => {
       const surface = surfaceRef.current;
@@ -285,7 +290,7 @@ export function CandidatePicker({
   );
 
   return (
-    <div class="candidate-picker">
+    <div class="candidate-picker" ref={rootRef}>
       <button
         ref={triggerRef}
         id={triggerId}

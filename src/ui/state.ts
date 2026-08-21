@@ -55,6 +55,7 @@ export interface ApplicationState {
   exportOnlyFilled: boolean;
   aboutOpen: boolean;
   locationEditing: boolean;
+  editAllVersion: number;
 }
 
 export function createApplicationState(
@@ -93,6 +94,7 @@ export function createApplicationState(
     exportOnlyFilled: false,
     aboutOpen: false,
     locationEditing: true,
+    editAllVersion: 0,
   };
 }
 

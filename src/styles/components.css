@@ -808,7 +808,7 @@ progress::-moz-progress-bar {
 .selected-candidate .candidate-details,
 .selected-special-choice .choice-details,
 .selected-special-choice .selected-label,
-.selected-special-choice .change-choice {
+.selected-special-choice .clear-selection-button {
   grid-column: 1;
 }
 
@@ -827,10 +827,31 @@ progress::-moz-progress-bar {
   text-transform: uppercase;
 }
 
-.change-choice {
+.selected-choice-trigger {
+  display: contents;
+  cursor: pointer;
+}
+
+.selected-candidate:has(.selected-choice-trigger:hover),
+.selected-candidate:has(.selected-choice-trigger:focus-visible) {
+  border-color: var(--color-brand-strong);
+  box-shadow: 0 0.3rem 0 color-mix(in srgb, var(--color-brand-strong) 30%, transparent);
+}
+
+.selected-candidate:has(.selected-choice-trigger:active) {
+  box-shadow: none;
+}
+
+.clear-selection-button {
   grid-column: 1;
   justify-self: start;
-  padding: 0.55rem 0.9rem;
+  padding: 0.5rem 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.clear-selection-button:hover:not(:disabled) {
+  color: var(--color-warning-text);
+  background: var(--color-warning-surface);
 }
 
 .candidate-photo {
@@ -1071,6 +1092,11 @@ progress::-moz-progress-bar {
   max-width: 42rem;
   color: var(--color-brand-soft);
   line-height: 1.5;
+}
+
+.review-edit-all {
+  margin-bottom: 1rem;
+  padding-inline: 0;
 }
 
 .progress-label {

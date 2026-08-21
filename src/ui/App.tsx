@@ -28,6 +28,7 @@ import { detectStateFromGeolocation } from "../location/geolocation.ts";
 import { STATE_NAMES } from "../location/states.ts";
 import {
   changeSelectionLocation,
+  clearSelectionInSession,
   selectCandidateInSession,
   selectNonCandidateInSession,
   startSelectionSession,
@@ -351,6 +352,23 @@ function ConfiguredApplication({
     focusAfterRender(`slot-title-${slot.order}`);
   };
 
+  const clearSlotSelection = (slot: VotingSlotModel): void => {
+    if (!state.session) return;
+    const result = clearSelectionInSession(state.session, slot.id);
+    if (!result.ok) return;
+    invalidateCurrentExport();
+    state.session = result.session;
+    const errors = new Map(state.selectionErrors);
+    errors.delete(slot.id);
+    state.selectionErrors = errors;
+    const choosingSlots = new Set(state.choosingSlots);
+    choosingSlots.delete(slot.id);
+    state.choosingSlots = choosingSlots;
+    state.announcement = `Escolha removida para ${slot.label}.`;
+    refresh();
+    focusAfterRender(`slot-title-${slot.order}`);
+  };
+
   const downloadExport = async (): Promise<void> => {
     const session = state.session;
     if (!session || resolvedSelectionCount(state) === 0) {
@@ -529,11 +547,20 @@ function ConfiguredApplication({
                     key={slot.id}
                     slot={slot}
                     state={state}
-                    onChange={() => {
+                    onEdit={() => {
                       state.choosingSlots = new Set(state.choosingSlots).add(slot.id);
                       refresh();
                       focusAfterRender(searchInputId(slot));
                     }}
+                    onCancelEdit={() => {
+                      const choosingSlots = new Set(state.choosingSlots);
+                      choosingSlots.delete(slot.id);
+                      state.choosingSlots = choosingSlots;
+                      refresh();
+                      focusAfterRender(`slot-title-${slot.order}`);
+                    }}
+                    onClear={() => clearSlotSelection(slot)}
+                    closeSignal={state.editAllVersion}
                     onSelect={(candidate) => chooseCandidate(slot, candidate)}
                     onNonCandidate={(choice, label) =>
                       chooseNonCandidate(slot, choice, label)
@@ -548,6 +575,12 @@ function ConfiguredApplication({
                   state.choosingSlots = new Set(state.choosingSlots).add(slot.id);
                   refresh();
                   focusAfterRender(searchInputId(slot));
+                }}
+                onEditAll={() => {
+                  state.choosingSlots = new Set();
+                  state.editAllVersion += 1;
+                  refresh();
+                  focusAfterRender("choices-title");
                 }}
                 onToggleOnlyFilled={(checked) => {
                   state.exportOnlyFilled = checked;

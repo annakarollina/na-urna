@@ -12,14 +12,20 @@ import { RefreshCwIcon } from "./Icon.tsx";
 export function VotingSlot({
   slot,
   state,
-  onChange,
+  onEdit,
+  onCancelEdit,
+  onClear,
+  closeSignal,
   onSelect,
   onNonCandidate,
   onRetry,
 }: {
   slot: VotingSlotModel;
   state: ApplicationState;
-  onChange: () => void;
+  onEdit: () => void;
+  onCancelEdit: () => void;
+  onClear: () => void;
+  closeSignal: number;
   onSelect: (candidate: Candidate) => void;
   onNonCandidate: (
     choice: NonCandidateVoteChoice,
@@ -35,7 +41,9 @@ export function VotingSlot({
       <SelectedChoice
         choice={choice}
         candidate={candidate}
-        onChange={onChange}
+        slotLabel={slot.label}
+        onEdit={onEdit}
+        onClear={onClear}
       />
     ) : null;
 
@@ -81,6 +89,8 @@ export function VotingSlot({
             slot={slot}
             candidates={file.candidates}
             replacing={choice !== undefined}
+            onClose={choice !== undefined ? onCancelEdit : undefined}
+            closeSignal={closeSignal}
             onSelect={onSelect}
             onNonCandidate={onNonCandidate}
           />

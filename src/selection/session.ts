@@ -9,7 +9,7 @@ import type {
   VotingSlotId,
 } from "../election/types.ts";
 import { VOTE_CHOICE_TYPE } from "../election/types.ts";
-import { selectVoteChoice } from "../election/selections.ts";
+import { clearVoteChoice, selectVoteChoice } from "../election/selections.ts";
 import { generateVotingSlots } from "../election/slots.ts";
 import type {
   SelectionError,
@@ -104,6 +104,16 @@ export function selectNonCandidateInSession(
     slotId,
     choice,
   );
+  return result.ok
+    ? { ok: true, session: { ...session, selections: result.selections } }
+    : result;
+}
+
+export function clearSelectionInSession(
+  session: SelectionSession,
+  slotId: VotingSlotId,
+): SessionSelectionResult {
+  const result = clearVoteChoice(session.slots, session.selections, slotId);
   return result.ok
     ? { ok: true, session: { ...session, selections: result.selections } }
     : result;

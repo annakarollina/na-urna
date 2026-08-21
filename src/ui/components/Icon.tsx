@@ -68,3 +68,7 @@ export function CheckIcon(props: IconProps) {
 export function ChevronDownIcon(props: IconProps) {
   return <Icon {...props}><path d="m6 9 6 6 6-6" /></Icon>;
 }
+
+export function XCircleIcon(props: IconProps) {
+  return <Icon {...props}><circle cx="12" cy="12" r="9" /><path d="m9.5 9.5 5 5m0-5-5 5" /></Icon>;
+}

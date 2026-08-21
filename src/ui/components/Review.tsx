@@ -168,6 +168,7 @@ function ExportActions({
 export function Review({
   state,
   onEditSlot,
+  onEditAll,
   onToggleOnlyFilled,
   onDownload,
   onShare,
@@ -175,6 +176,7 @@ export function Review({
 }: {
   state: ApplicationState;
   onEditSlot: (slot: VotingSlot) => void;
+  onEditAll: () => void;
   onToggleOnlyFilled: (checked: boolean) => void;
   onDownload: () => void;
   onShare: () => void;
@@ -191,6 +193,13 @@ export function Review({
       <p class="review-description">
         Confira candidaturas, legendas e votos em branco antes de gerar a imagem.
       </p>
+      <button
+        type="button"
+        class="text-button review-edit-all"
+        onClick={onEditAll}
+      >
+        Trocar minhas escolhas
+      </button>
       <ol class="review-list">
         {session.slots.map((slot) => {
           const candidate = selectedCandidate(state, slot);

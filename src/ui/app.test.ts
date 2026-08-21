@@ -84,6 +84,17 @@ function findSlotSection(container: HTMLElement, slotLabel: string): HTMLElement
   return section as HTMLElement;
 }
 
+function findReviewItem(container: HTMLElement, slotLabel: string): HTMLElement {
+  const item = [...container.querySelectorAll<HTMLElement>(".review-item")].find(
+    (element) =>
+      element.querySelector(".review-office strong")?.textContent === slotLabel,
+  );
+  if (!item) {
+    throw new Error(`Item de revisão "${slotLabel}" não encontrado.`);
+  }
+  return item;
+}
+
 async function selectCandidate(
   container: HTMLElement,
   slotId: string,
@@ -197,45 +208,63 @@ describe("integração da UI Preact", () => {
     expect(container.querySelector("#results-federal_deputy-1")).toBeNull();
     expect(container.querySelector('[data-office="FEDERAL_DEPUTY"] .selected-candidate')).not.toBeNull();
 
-    await act(async () =>
-      container
-        .querySelector<HTMLButtonElement>('[data-office="FEDERAL_DEPUTY"] .change-choice')
-        ?.click(),
-    );
+    const slot = findSlotSection(container, "Deputado Federal");
 
-    const reopenedTrigger = container.querySelector<HTMLButtonElement>(
-      "#candidate-picker-trigger-federal_deputy-1",
-    );
-    await vi.waitFor(() => {
-      expect(reopenedTrigger?.getAttribute("aria-expanded")).toBe("true");
-    });
+    async function reopenEditing(): Promise<HTMLButtonElement> {
+      await act(async () =>
+        slot.querySelector<HTMLButtonElement>(".selected-choice-trigger")?.click(),
+      );
+      const reopenedTrigger = slot.querySelector<HTMLButtonElement>(
+        "#candidate-picker-trigger-federal_deputy-1",
+      );
+      await vi.waitFor(() => {
+        expect(reopenedTrigger?.getAttribute("aria-expanded")).toBe("true");
+      });
+      if (!reopenedTrigger) {
+        throw new Error("Reabertura do picker de Deputado Federal não encontrada.");
+      }
+      return reopenedTrigger;
+    }
 
+    // Fechar sem escolher (Escape) não remove a escolha canônica: A continua
+    // selecionado e o card volta a mostrá-la, em vez de ficar preso no picker.
+    await reopenEditing();
     await act(async () => {
       document.dispatchEvent(
         new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
       );
     });
-    expect(reopenedTrigger?.getAttribute("aria-expanded")).toBe("false");
+    expect(slot.querySelector("#candidate-picker-trigger-federal_deputy-1")).toBeNull();
+    expect(slot.querySelector(".selected-candidate")?.textContent).toContain(
+      "EXEMPLO FEDERAL A",
+    );
 
-    await act(async () => reopenedTrigger?.click());
-    expect(reopenedTrigger?.getAttribute("aria-expanded")).toBe("true");
+    // O mesmo vale para fechar clicando fora.
+    await reopenEditing();
     await act(async () => {
       document.body.dispatchEvent(
         new PointerEvent("pointerdown", { bubbles: true }),
       );
     });
-    expect(reopenedTrigger?.getAttribute("aria-expanded")).toBe("false");
+    expect(slot.querySelector("#candidate-picker-trigger-federal_deputy-1")).toBeNull();
+    expect(slot.querySelector(".selected-candidate")?.textContent).toContain(
+      "EXEMPLO FEDERAL A",
+    );
   });
 
-  it("trocar candidato: volta direto ao seletor original e preserva as demais escolhas", async () => {
+  it("trocar candidato: volta direto ao seletor original, preserva as demais escolhas e o Review passa para o novo candidato", async () => {
     const container = await mountSpSession();
 
     await selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL A");
     await selectCandidate(container, "governor-1", "EXEMPLO GOVERNO");
 
+    expect(
+      findReviewItem(container, "Deputado Federal").textContent,
+    ).toContain("EXEMPLO FEDERAL A");
+
     await act(async () =>
       container
-        .querySelector<HTMLButtonElement>('[data-office="FEDERAL_DEPUTY"] .change-choice')
+        .querySelector<HTMLButtonElement>('[data-office="FEDERAL_DEPUTY"] .selected-choice-trigger')
         ?.click(),
     );
 
@@ -243,12 +272,77 @@ describe("integração da UI Preact", () => {
     expect(
       container.querySelector('[data-office="GOVERNOR"] .selected-candidate')?.textContent,
     ).toContain("EXEMPLO GOVERNO");
+    expect(
+      findReviewItem(container, "Deputado Federal").textContent,
+    ).toContain("EXEMPLO FEDERAL A");
 
     await selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL B");
 
     const selectedCard = container.querySelector('[data-office="FEDERAL_DEPUTY"] .selected-candidate');
     expect(selectedCard?.textContent).toContain("2020");
     expect(selectedCard?.textContent).not.toContain("1010");
+    const reviewItem = findReviewItem(container, "Deputado Federal");
+    expect(reviewItem.textContent).toContain("EXEMPLO FEDERAL B");
+    expect(reviewItem.textContent).not.toContain("EXEMPLO FEDERAL A");
+    expect(
+      container.querySelector('[data-office="GOVERNOR"] .selected-candidate')?.textContent,
+    ).toContain("EXEMPLO GOVERNO");
+  });
+
+  it("esvaziar seleção: remove a escolha canônica, zera o Review e não abre o picker", async () => {
+    const container = await mountSpSession();
+    await selectCandidate(container, "federal_deputy-1", "EXEMPLO FEDERAL A");
+
+    expect(
+      findReviewItem(container, "Deputado Federal").textContent,
+    ).toContain("EXEMPLO FEDERAL A");
+
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>(
+          '[data-office="FEDERAL_DEPUTY"] .clear-selection-button',
+        )
+        ?.click(),
+    );
+
+    const slot = findSlotSection(container, "Deputado Federal");
+    expect(slot.querySelector(".selected-candidate")).toBeNull();
+    expect(slot.querySelector("#candidate-picker-trigger-federal_deputy-1")).not.toBeNull();
+    expect(
+      slot.querySelector<HTMLButtonElement>("#candidate-picker-trigger-federal_deputy-1")
+        ?.getAttribute("aria-expanded"),
+    ).toBe("false");
+    expect(
+      [...slot.querySelectorAll("button")].some((button) =>
+        button.textContent?.includes("Votar em branco"),
+      ),
+    ).toBe(true);
+
+    const reviewItem = findReviewItem(container, "Deputado Federal");
+    expect(reviewItem.textContent).not.toContain("EXEMPLO FEDERAL A");
+    expect(reviewItem.textContent).toContain("Ainda não preenchido");
+  });
+
+  it("Trocar minhas escolhas: fecha o picker aberto sem limpar escolhas e sem escolher cargo automaticamente", async () => {
+    const container = await mountSpSession();
+    await selectCandidate(container, "governor-1", "EXEMPLO GOVERNO");
+
+    const trigger = container.querySelector<HTMLButtonElement>(
+      "#candidate-picker-trigger-federal_deputy-1",
+    );
+    await act(async () => trigger?.click());
+    expect(trigger?.getAttribute("aria-expanded")).toBe("true");
+
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>(".review-edit-all")
+        ?.click(),
+    );
+
+    expect(
+      container.querySelector("#candidate-picker-trigger-federal_deputy-1")
+        ?.getAttribute("aria-expanded"),
+    ).toBe("false");
     expect(
       container.querySelector('[data-office="GOVERNOR"] .selected-candidate')?.textContent,
     ).toContain("EXEMPLO GOVERNO");

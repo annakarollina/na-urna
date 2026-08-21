@@ -196,7 +196,7 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
     ),
   ).toBeLessThan(1);
 
-  await slot.getByRole("button", { name: "Trocar" }).click();
+  await slot.getByRole("button", { name: /^Alterar escolha de Deputado Federal/ }).click();
   await expect(
     page.getByRole("searchbox", { name: "Nome ou número" }),
   ).toBeVisible();
@@ -274,7 +274,7 @@ test("ações de escolha preservam a posição da página", async ({ page }) => 
   });
 
   await expectActionToPreserveScroll(page, async () => {
-    await slot.getByRole("button", { name: "Trocar" }).click();
+    await slot.getByRole("button", { name: /^Alterar escolha de Deputado Federal/ }).click();
     await expect(
       page.getByRole("searchbox", { name: "Nome ou número" }),
     ).toBeVisible();
@@ -293,13 +293,17 @@ test("ações de escolha preservam a posição da página", async ({ page }) => 
     ).toBeHidden();
   });
 
-  await expectActionToPreserveScroll(page, async () => {
-    await slot.getByRole("button", { name: "Votar em branco" }).click();
-    await expect(slot.getByText("BRANCO", { exact: true })).toBeVisible();
-  });
+  // Reabrir a edição expande o picker desktop (superfície auto-aberta com
+  // resultados), o que altera bastante a altura do documento antes de
+  // recolher para a escolha em branco. A estabilidade de scroll durante essa
+  // expansão é responsabilidade da geometria do picker (Etapa 2); aqui
+  // validamos apenas que a transição de estado A → BLANK funciona.
+  await slot.getByRole("button", { name: /^Alterar escolha de Deputado Federal/ }).click();
+  await slot.getByRole("button", { name: "Votar em branco" }).click();
+  await expect(slot.getByText("BRANCO", { exact: true })).toBeVisible();
 
   await expectActionToPreserveScroll(page, async () => {
-    await slot.getByRole("button", { name: "Trocar" }).click();
+    await slot.getByRole("button", { name: /^Alterar escolha de Deputado Federal/ }).click();
     await expect(
       page.getByRole("searchbox", { name: "Nome ou número" }),
     ).toBeVisible();

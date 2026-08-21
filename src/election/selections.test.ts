@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ELECTION_2026 } from "./elections.ts";
-import { selectVoteChoice } from "./selections.ts";
+import { clearVoteChoice, selectVoteChoice } from "./selections.ts";
 import { generateVotingSlots } from "./slots.ts";
 import {
   ELECTORAL_OFFICE,
@@ -113,6 +113,50 @@ describe("seleção para os dois slots de senador", () => {
     expect(selectVoteChoice(slots, {}, "PRESIDENT:1", partyChoice)).toMatchObject({
       ok: false,
       error: { code: "PARTY_NOT_ALLOWED" },
+    });
+  });
+});
+
+describe("limpar uma escolha", () => {
+  it("remove a chave do slot em vez de gravar um voto em branco", () => {
+    const selected = selectVoteChoice(slots, {}, "PRESIDENT:1", {
+      type: VOTE_CHOICE_TYPE.CANDIDATE,
+      candidateId: "presidente-1",
+      office: ELECTORAL_OFFICE.PRESIDENT,
+    });
+    if (!selected.ok) throw new Error("A seleção deveria ser válida.");
+
+    const cleared = clearVoteChoice(slots, selected.selections, "PRESIDENT:1");
+
+    expect(cleared).toEqual({ ok: true, selections: {} });
+    expect(cleared.ok && "PRESIDENT:1" in cleared.selections).toBe(false);
+  });
+
+  it("preserva as demais escolhas ao limpar apenas um slot", () => {
+    const first = selectVoteChoice(slots, {}, "SENATOR:1", {
+      type: VOTE_CHOICE_TYPE.CANDIDATE,
+      candidateId: "senador-100",
+      office: ELECTORAL_OFFICE.SENATOR,
+    });
+    if (!first.ok) throw new Error("A primeira escolha deveria ser válida.");
+    const second = selectVoteChoice(slots, first.selections, "SENATOR:2", {
+      type: VOTE_CHOICE_TYPE.CANDIDATE,
+      candidateId: "senador-200",
+      office: ELECTORAL_OFFICE.SENATOR,
+    });
+    if (!second.ok) throw new Error("A segunda escolha deveria ser válida.");
+
+    const cleared = clearVoteChoice(slots, second.selections, "SENATOR:1");
+
+    expect(cleared).toEqual({
+      ok: true,
+      selections: {
+        "SENATOR:2": {
+          type: VOTE_CHOICE_TYPE.CANDIDATE,
+          candidateId: "senador-200",
+          office: ELECTORAL_OFFICE.SENATOR,
+        },
+      },
     });
   });
 });
