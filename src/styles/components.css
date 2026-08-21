@@ -488,31 +488,14 @@ select {
   overscroll-behavior: contain;
 }
 
-.candidate-picker-surface[hidden],
-.candidate-picker-surface[popover]:not(:popover-open) {
+.candidate-picker-surface[hidden] {
   display: none;
 }
 
-.candidate-picker-surface[popover]:popover-open {
-  display: grid;
-}
-
-.candidate-picker-surface[data-mode="desktop"][data-native-popover="false"] {
+.candidate-picker-surface[data-mode="desktop"] {
   position: absolute;
-  top: calc(var(--control-height) + var(--space-2));
-  right: 0;
-  left: 0;
-  max-height: min(35rem, calc(100vh - 2rem));
-}
-
-.candidate-picker-surface[data-mode="desktop"][data-native-popover="true"] {
-  position: fixed;
-  top: var(--picker-block-start);
-  left: var(--picker-inline-start);
-  width: var(--picker-inline-size);
-  max-width: calc(100vw - 2rem);
-  max-height: var(--picker-max-block-size);
-  margin: 0;
+  inset-inline: 0;
+  inset-block-start: calc(100% + var(--space-2));
 }
 
 .candidate-picker-surface[data-mode="mobile"] {
@@ -527,10 +510,7 @@ select {
   box-shadow: none;
 }
 
-.candidate-picker-surface[data-mode="desktop"][data-native-popover="false"]:not(
-    [hidden]
-  ),
-.candidate-picker-surface[data-native-popover="true"]:popover-open {
+.candidate-picker-surface[data-mode="desktop"]:not([hidden]) {
   animation: surface-rise-in var(--duration-base) var(--ease-standard);
 }
 
@@ -606,6 +586,13 @@ select {
   padding: var(--space-3);
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+.candidate-picker-surface[data-mode="desktop"] .candidate-picker-results {
+  max-block-size: min(
+    var(--candidate-picker-available-block-size, min(60vh, 30rem)),
+    var(--candidate-picker-comfortable-max)
+  );
 }
 
 .primary-button,

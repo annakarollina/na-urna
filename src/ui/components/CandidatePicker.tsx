@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "preact/hooks";
 
 import {
   candidatePartyOptions,
@@ -49,50 +55,11 @@ function useMobilePicker(): boolean {
   return mobile;
 }
 
-function supportsPopoverApi(): boolean {
-  return (
-    typeof HTMLElement !== "undefined" &&
-    Object.hasOwn(HTMLElement.prototype, "popover") &&
-    typeof HTMLElement.prototype.showPopover === "function"
-  );
-}
+const AVAILABLE_SPACE_MARGIN_PX = 16;
 
-function hidePopoverIfOpen(surface: HTMLElement): void {
-  if (
-    typeof surface.hidePopover === "function" &&
-    surface.matches(":popover-open")
-  ) {
-    surface.hidePopover();
-  }
-}
-
-function positionDesktopPopover(
-  surface: HTMLElement,
-  trigger: HTMLElement,
-): void {
-  const margin = 16;
-  const gap = 8;
-  const triggerRectangle = trigger.getBoundingClientRect();
-  const width = Math.min(640, window.innerWidth - margin * 2);
-  const left = Math.min(
-    Math.max(margin, triggerRectangle.left),
-    window.innerWidth - width - margin,
-  );
-  const availableBelow = window.innerHeight - triggerRectangle.bottom - gap - margin;
-  const availableAbove = triggerRectangle.top - gap - margin;
-  const placeAbove = availableBelow < 280 && availableAbove > availableBelow;
-  const maximumHeight = Math.max(
-    220,
-    Math.min(560, placeAbove ? availableAbove : availableBelow),
-  );
-  const top = placeAbove
-    ? Math.max(margin, triggerRectangle.top - maximumHeight - gap)
-    : triggerRectangle.bottom + gap;
-
-  surface.style.setProperty("--picker-inline-size", `${width}px`);
-  surface.style.setProperty("--picker-inline-start", `${left}px`);
-  surface.style.setProperty("--picker-block-start", `${top}px`);
-  surface.style.setProperty("--picker-max-block-size", `${maximumHeight}px`);
+function measureAvailableBlockSize(results: HTMLElement): number {
+  const rect = results.getBoundingClientRect();
+  return Math.max(0, window.innerHeight - rect.top - AVAILABLE_SPACE_MARGIN_PX);
 }
 
 function CandidateResults({
@@ -203,7 +170,6 @@ export function CandidatePicker({
   const surfaceRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
-  const nativePopover = !mobile && supportsPopoverApi();
   const inputId = searchInputId(slot);
   const normalizedSlotId = slot.id.replace(":", "-").toLowerCase();
   const triggerId = `candidate-picker-trigger-${normalizedSlotId}`;
@@ -218,8 +184,6 @@ export function CandidatePicker({
   const selectedParty = partyOptions.find((option) => option.party === party);
 
   const closePicker = (restoreFocus: boolean): void => {
-    const surface = surfaceRef.current;
-    if (surface) hidePopoverIfOpen(surface);
     setOpen(false);
     if (restoreFocus) {
       requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
@@ -228,21 +192,40 @@ export function CandidatePicker({
   };
 
   useEffect(() => {
-    const surface = surfaceRef.current;
-    if (!surface) return;
-
-    if (!open) {
-      hidePopoverIfOpen(surface);
-      return;
-    }
-
-    if (nativePopover) {
-      const trigger = triggerRef.current;
-      if (trigger) positionDesktopPopover(surface, trigger);
-      if (!surface.matches(":popover-open")) surface.showPopover();
-    }
+    if (!open) return;
     requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
-  }, [nativePopover, open]);
+  }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open || mobile) return;
+    const surface = surfaceRef.current;
+    const results = resultsRef.current;
+    if (!surface || !results) return;
+
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      surface.style.setProperty(
+        "--candidate-picker-available-block-size",
+        `${measureAvailableBlockSize(results)}px`,
+      );
+    };
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(measure);
+    };
+
+    // Medição síncrona antes da primeira pintura: evita um frame com o valor
+    // de fallback e o salto visual/scroll que isso causaria ao abrir.
+    measure();
+    window.addEventListener("scroll", schedule, { capture: true, passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule, true);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [open, mobile]);
 
   useEffect(() => {
     if (previousMobile.current === mobile) return;
@@ -250,7 +233,7 @@ export function CandidatePicker({
     if (open) closePicker(true);
   }, [mobile, open]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -281,14 +264,6 @@ export function CandidatePicker({
     if (open) closePicker(false);
   }, [closeSignal]);
 
-  useEffect(
-    () => () => {
-      const surface = surfaceRef.current;
-      if (surface) hidePopoverIfOpen(surface);
-    },
-    [],
-  );
-
   return (
     <div class="candidate-picker" ref={rootRef}>
       <button
@@ -299,7 +274,7 @@ export function CandidatePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={resultsId}
-        onClick={() => setOpen(true)}
+        onClick={() => (open ? closePicker(false) : setOpen(true))}
       >
         <SearchIcon />
         {replacing ? "Escolher outro candidato" : "Escolher candidato"}
@@ -309,9 +284,7 @@ export function CandidatePicker({
         ref={surfaceRef}
         class="candidate-picker-surface"
         data-mode={mobile ? "mobile" : "desktop"}
-        data-native-popover={nativePopover ? "true" : "false"}
-        popover={nativePopover ? "manual" : undefined}
-        hidden={!nativePopover && !open}
+        hidden={!open}
         role="dialog"
         aria-modal={mobile ? "true" : undefined}
         aria-labelledby={titleId}

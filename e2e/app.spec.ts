@@ -56,6 +56,23 @@ async function openCandidatePicker(page: Page, slotName: string): Promise<void> 
   ).toBeVisible();
 }
 
+async function padCandidateResults(
+  page: Page,
+  slotName: string,
+  totalCards: number,
+): Promise<void> {
+  await page
+    .getByRole("dialog", { name: slotName })
+    .locator(".candidate-results")
+    .evaluate((list, total) => {
+      const template = list.querySelector("li");
+      if (!template) return;
+      while (list.children.length < total) {
+        list.append(template.cloneNode(true));
+      }
+    }, totalCards);
+}
+
 async function scrollDown(
   page: Page,
   browserName: string,
@@ -210,6 +227,98 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
   await expect(
     page.getByRole("button", { name: "Baixar minha colinha" }),
   ).toBeEnabled();
+});
+
+test("Candidate Picker desktop: superfície ancorada ao trigger, toggle e scroll da página", async ({
+  page,
+}) => {
+  test.skip(
+    page.viewportSize()?.width !== 1440,
+    "Geometria do picker desktop; mobile usa a superfície fullscreen dedicada.",
+  );
+  await openApplication(page);
+  await selectSaoPaulo(page);
+  await openCandidatePicker(page, "Deputado Federal");
+
+  const trigger = page.locator("#candidate-picker-trigger-federal_deputy-1");
+  const surface = page.getByRole("dialog", { name: "Deputado Federal" });
+
+  const triggerBox = (await trigger.boundingBox())!;
+  const surfaceBox = (await surface.boundingBox())!;
+  expect(Math.abs(surfaceBox.width - triggerBox.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(surfaceBox.x - triggerBox.x)).toBeLessThanOrEqual(1);
+  expect(surfaceBox.y).toBeGreaterThan(triggerBox.y + triggerBox.height);
+
+  // Toggle: clicar de novo no mesmo trigger fecha, sem depender de Escape/Voltar.
+  await trigger.click();
+  await expect(surface).toBeHidden();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+  // Reabrir e rolar a página: a superfície não é position:fixed, então segue o
+  // trigger no documento sem nenhuma coordenada persistida em JS.
+  await trigger.click();
+  await expect(surface).toBeVisible();
+  await page.mouse.wheel(0, 400);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
+
+  const triggerBoxAfterScroll = (await trigger.boundingBox())!;
+  const surfaceBoxAfterScroll = (await surface.boundingBox())!;
+  expect(
+    Math.abs(surfaceBoxAfterScroll.width - triggerBoxAfterScroll.width),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(surfaceBoxAfterScroll.x - triggerBoxAfterScroll.x),
+  ).toBeLessThanOrEqual(1);
+  expect(surfaceBoxAfterScroll.y).toBeGreaterThan(
+    triggerBoxAfterScroll.y + triggerBoxAfterScroll.height,
+  );
+});
+
+test("Candidate Picker desktop: altura da lista acompanha o espaço disponível até o limite confortável", async ({
+  page,
+}) => {
+  test.skip(
+    page.viewportSize()?.width !== 1440,
+    "Geometria do picker desktop; mobile usa a superfície fullscreen dedicada.",
+  );
+  await openApplication(page);
+  await selectSaoPaulo(page);
+  await openCandidatePicker(page, "Deputado Federal");
+  await padCandidateResults(page, "Deputado Federal", 20);
+
+  const results = page
+    .getByRole("dialog", { name: "Deputado Federal" })
+    .locator(".candidate-picker-results");
+
+  await page.setViewportSize({ width: 1440, height: 500 });
+  let shortHeight = 0;
+  await expect
+    .poll(async () => {
+      shortHeight = (await results.boundingBox())?.height ?? 0;
+      return shortHeight;
+    })
+    .toBeGreaterThan(0);
+
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  let tallHeight = 0;
+  await expect
+    .poll(async () => {
+      tallHeight = (await results.boundingBox())?.height ?? 0;
+      return tallHeight > shortHeight;
+    })
+    .toBe(true);
+
+  // Cresce com mais espaço, mas não passa do limite confortável de ~4 cards
+  // (--candidate-picker-comfortable-max: 35.5rem ≈ 568px a 16px/rem).
+  expect(tallHeight).toBeLessThanOrEqual(600);
+
+  // O cabeçalho de busca continua visível; só a lista de resultados rola.
+  await expect(page.getByRole("searchbox", { name: "Nome ou número" })).toBeVisible();
+  const scrollMetrics = await results.evaluate((element) => ({
+    scrollHeight: element.scrollHeight,
+    clientHeight: element.clientHeight,
+  }));
+  expect(scrollMetrics.scrollHeight).toBeGreaterThan(scrollMetrics.clientHeight);
 });
 
 test("compartilha em um toque e reutiliza o PNG preparado", async ({ page }) => {
