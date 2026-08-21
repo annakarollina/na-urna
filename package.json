@@ -6,11 +6,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:e2e": "vite --mode e2e --host 127.0.0.1 --port 4175",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.pipeline.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.pipeline.json && tsc -p tsconfig.e2e.json",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
     "data:tse:compile": "tsc -p tsconfig.pipeline.build.json",
     "data:tse": "npm run data:tse:compile && node .tmp/tse-pipeline-build/scripts/tse/run.js",
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.62.1",
     "@types/node": "24.13.3",
     "eslint": "10.8.1",
     "globals": "17.4.0",

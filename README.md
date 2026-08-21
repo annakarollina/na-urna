@@ -63,6 +63,15 @@ npm run dev
 
 `npm run data:tse` obtém e valida o snapshot oficial necessário para exercitar o fluxo completo; se um snapshot válido já existir localmente, ele não precisa ser gerado a cada inicialização. `npm run build` cria o bundle de produção e `npm run preview` o serve localmente sob o caminho `/minha-colinha/`.
 
+Os testes rápidos continuam em `npm run check`. A cobertura de navegador real usa Playwright com Chromium desktop, Chromium mobile/touch e WebKit mobile/touch:
+
+```bash
+npx playwright install chromium webkit
+npm run test:e2e
+```
+
+O servidor E2E ativa as fixtures fictícias por um modo Vite exclusivo de teste; produção continua usando somente o snapshot oficial. As comparações visuais versionadas têm Windows como ambiente canônico e são ignoradas em outras plataformas, onde os fluxos comportamentais permanecem obrigatórios.
+
 ## Pipeline de dados oficiais
 
 O adaptador 2026 baixa os recursos oficiais, interpreta CSV ISO-8859-1, associa as fotos por `SQ_CANDIDATO`, normaliza para o contrato interno e só então troca o snapshot publicado:
