@@ -10,6 +10,14 @@ declare global {
 
 const snapshotStylePath = join(process.cwd(), "e2e", "snapshot.css");
 
+function cssTimeToMs(value: string): number {
+  const match = /^(-?[\d.]+(?:e-?\d+)?)(ms|s)$/.exec(value.trim());
+  if (!match) return Number.POSITIVE_INFINITY;
+  const [, amount, unit] = match;
+  const numeric = Number(amount);
+  return unit === "s" ? numeric * 1000 : numeric;
+}
+
 async function openApplication(page: Page): Promise<void> {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
@@ -142,8 +150,8 @@ test("Sobre abre, fecha e não prende o scroll da página", async ({
       backdrop: getComputedStyle(about, "::backdrop").animationDuration,
     };
   });
-  expect(parseFloat(motionDurations?.dialog ?? "1")).toBeLessThan(0.001);
-  expect(parseFloat(motionDurations?.backdrop ?? "1")).toBeLessThan(0.001);
+  expect(cssTimeToMs(motionDurations?.dialog ?? "1s")).toBeLessThan(1);
+  expect(cssTimeToMs(motionDurations?.backdrop ?? "1s")).toBeLessThan(1);
 
   const lockedScroll = await page.evaluate(() => window.scrollY);
   await scrollDown(page, browserName, 500);
@@ -181,12 +189,12 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
     .click();
   await expect(slot.getByText("EXEMPLO FEDERAL A", { exact: true })).toBeVisible();
   expect(
-    parseFloat(
+    cssTimeToMs(
       await slot
         .locator(".selected-candidate")
         .evaluate((element) => getComputedStyle(element).animationDuration),
     ),
-  ).toBeLessThan(0.001);
+  ).toBeLessThan(1);
 
   await slot.getByRole("button", { name: "Trocar" }).click();
   await expect(
