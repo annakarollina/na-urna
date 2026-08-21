@@ -168,6 +168,17 @@ afterEach(() => {
 });
 
 describe("integração da UI Preact", () => {
+  it("oferece branco, mas não expõe voto nulo na interface", async () => {
+    const container = await mountSpSession();
+
+    expect(
+      container.querySelector<HTMLButtonElement>(
+        '[data-office="FEDERAL_DEPUTY"] .alternative-actions button',
+      )?.textContent,
+    ).toContain("Votar em branco");
+    expect(container.textContent).not.toContain("Votar nulo");
+  });
+
   it("picker de candidatos: abre por ação explícita, fecha ao selecionar e reabre ao trocar", async () => {
     const container = await mountSpSession();
     const trigger = container.querySelector<HTMLButtonElement>(

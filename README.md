@@ -21,7 +21,7 @@ Em um ano eleitoral suportado, a aplicação:
 3. permite preencher essa informação manualmente ou sugeri-la por geolocalização, sempre com confirmação do usuário;
 4. carrega somente os candidatos pertinentes à circunscrição e aos cargos da eleição;
 5. apresenta candidaturas em ordem neutra, com busca por prefixo e filtro de partido;
-6. permite registrar candidatura, legenda quando legalmente aplicável, branco ou nulo;
+6. permite registrar candidatura, legenda quando legalmente aplicável ou voto em branco;
 7. monta a colinha na ordem oficial de votação;
 8. baixa ou, quando suportado pelo navegador, compartilha a imagem gerada localmente; posições não escolhidas podem aparecer como não preenchidas ou ser omitidas por opção do usuário.
 

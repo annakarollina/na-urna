@@ -72,7 +72,7 @@ flowchart LR
 
 A busca ignora caixa e acentos. Cada termo textual precisa ser prefixo de alguma palavra do nome de urna; a consulta numérica precisa ser prefixo do número eleitoral. No desktop, um picker flutuante usa a Popover API quando disponível e um fallback CSS com Escape, clique externo e restauração de foco nos demais navegadores. Em telas estreitas ou com ponteiro coarse, o mesmo componente ocupa `100dvh` e mantém a lista em uma área rolável própria. Partido e busca filtram juntos a lista completa, contínua e ordenada numericamente, sem paginação de apresentação ou “Mostrar mais”.
 
-Além de candidatura, o slot aceita branco e nulo. Nos cargos proporcionais de 2026 — Deputado Federal e Deputado Estadual ou Distrital — também aceita legenda extraída dos próprios candidatos carregados.
+Além de candidatura, a interface do slot aceita voto em branco. Nos cargos proporcionais de 2026 — Deputado Federal e Deputado Estadual ou Distrital — também aceita legenda extraída dos próprios candidatos carregados. O modelo de domínio preserva o suporte explícito a voto nulo para compatibilidade e composição, mas essa opção não é oferecida pela interface.
 
 ## 5. Fluxo específico de 2026
 

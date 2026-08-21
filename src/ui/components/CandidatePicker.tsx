@@ -125,8 +125,8 @@ function CandidateResults({
               aria-label={`${replacing ? "Substituir por" : "Selecionar"} ${candidate.ballotName}, número ${candidate.number}, partido ${candidate.party}`}
               onClick={() => onSelect(candidate)}
             >
-              <CandidatePhoto candidate={candidate} />
               <CandidateDetails candidate={candidate} />
+              <CandidatePhoto candidate={candidate} />
               <span class="candidate-card-action">
                 {replacing ? "Substituir" : "Selecionar"}
               </span>
@@ -158,15 +158,6 @@ function AlternativeChoices({
           }
         >
           Votar em branco
-        </button>
-        <button
-          type="button"
-          class="text-button"
-          onClick={() =>
-            onNonCandidate({ type: VOTE_CHOICE_TYPE.NULL }, "Voto nulo")
-          }
-        >
-          Votar nulo
         </button>
       </div>
     </div>

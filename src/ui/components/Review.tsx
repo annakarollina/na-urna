@@ -172,8 +172,7 @@ export function Review({
     <section class="review on-dark" aria-labelledby="review-title">
       <h2 id="review-title">Revise sua colinha</h2>
       <p class="review-description">
-        Confira candidaturas, legendas, votos em branco ou nulos antes de gerar
-        a imagem.
+        Confira candidaturas, legendas e votos em branco antes de gerar a imagem.
       </p>
       <ol class="review-list">
         {session.slots.map((slot) => {
@@ -187,8 +186,8 @@ export function Review({
               </div>
               {voteChoice?.type === VOTE_CHOICE_TYPE.CANDIDATE && candidate ? (
                 <div class="review-candidate">
-                  <CandidatePhoto candidate={candidate} />
                   <CandidateDetails candidate={candidate} />
+                  <CandidatePhoto candidate={candidate} />
                 </div>
               ) : voteChoice && voteChoice.type !== VOTE_CHOICE_TYPE.CANDIDATE ? (
                 <div class="review-special-choice">

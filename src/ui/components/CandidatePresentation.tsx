@@ -56,7 +56,7 @@ export function CandidateDetails({ candidate }: { candidate: Candidate }) {
     <div class="candidate-details">
       <strong class="candidate-number">{candidate.number}</strong>
       <span class="candidate-name">{candidate.ballotName}</span>
-      <span class="candidate-party">{candidate.party}</span>
+      <span class="candidate-party">Partido · {candidate.party}</span>
       {isCandidatePendingOrAmbiguous(candidate) ? (
         <span class="candidate-status">
           Situação da candidatura ainda não definitiva
@@ -122,10 +122,10 @@ export function SelectedChoice({
       class={classes.join(" ")}
       aria-label={`Escolha atual: ${choiceAccessibleLabel(choice, candidate)}`}
     >
+      <ChoiceDetails choice={choice} candidate={candidate} />
       {choice.type === VOTE_CHOICE_TYPE.CANDIDATE && candidate ? (
         <CandidatePhoto candidate={candidate} />
       ) : null}
-      <ChoiceDetails choice={choice} candidate={candidate} />
       <span class="selected-label">Escolha atual</span>
       <button
         type="button"
