@@ -332,7 +332,7 @@ export function CandidatePicker({
 
   return (
     <div class="candidate-picker" ref={rootRef}>
-      <VoteBlankAction onNonCandidate={onNonCandidate} />
+      {mobile ? null : <VoteBlankAction onNonCandidate={onNonCandidate} />}
       <button
         ref={triggerRef}
         id={triggerId}
@@ -366,6 +366,7 @@ export function CandidatePicker({
             <span>Voltar</span>
           </button>
           <h3 id={titleId}>{slot.label}</h3>
+          {mobile ? <VoteBlankAction onNonCandidate={onNonCandidate} /> : null}
         </header>
         <div class="candidate-picker-tools">
           <div class="candidate-filters">

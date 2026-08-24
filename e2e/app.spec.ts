@@ -413,13 +413,18 @@ test("ações de escolha preservam a posição da página", async ({ page }) => 
     ).toBeHidden();
   });
 
-  // Reabrir a edição expande o picker desktop (superfície auto-aberta com
+  // Reabrir a edição expande o picker (superfície auto-aberta com
   // resultados), o que altera bastante a altura do documento antes de
   // recolher para a escolha em branco. A estabilidade de scroll durante essa
   // expansão é responsabilidade da geometria do picker (Etapa 2); aqui
   // validamos apenas que a transição de estado A → BLANK funciona.
-  // "Votar em branco" fica acima do trigger (Etapa 2.1), então continua
-  // clicável com o picker ainda aberto.
+  // No desktop, "Votar em branco" fica acima do trigger (Etapa 2.1), fora da
+  // superfície, e continua clicável com o picker aberto. No mobile, a
+  // superfície é um modal fullscreen (`aria-modal="true"`, `inset: 0`) que
+  // cobriria essa mesma ação se ela ficasse fora dela — por isso "Votar em
+  // branco" também é renderizado dentro do cabeçalho do picker mobile
+  // (sempre visível, acima da lista de resultados), permanecendo clicável
+  // com o picker aberto em ambos os modos.
   await slot.getByRole("button", { name: /^Alterar escolha de Deputado Federal/ }).click();
   await slot.getByRole("button", { name: "Votar em branco" }).click();
   await expect(slot.getByText("BRANCO", { exact: true })).toBeVisible();

@@ -481,6 +481,12 @@ select {
   margin-bottom: var(--space-1);
 }
 
+.candidate-picker-header .vote-blank-action {
+  grid-column: 3;
+  grid-row: 1;
+  margin-bottom: 0;
+}
+
 .candidate-picker-surface {
   z-index: 40;
   display: grid;
