@@ -55,9 +55,10 @@ function useMobilePicker(): boolean {
   return mobile;
 }
 
-// A superfície fica ancorada a `--picker-trigger-gap` (ver components.css); o
-// espaço reservado no fim do viewport reutiliza o mesmo token para não haver
-// dois valores de espaçamento divergentes entre CSS e JS.
+// A superfície é ancorada ao TRIGGER (não ao wrapper): top = triggerRect.bottom
+// + gap, com o mesmo `--picker-trigger-gap` (ver components.css) usado tanto
+// para posicionar a superfície quanto para calcular o espaço vertical
+// disponível — nunca dois valores de espaçamento divergentes entre CSS e JS.
 const PICKER_GAP_PROPERTY = "--picker-trigger-gap";
 const PICKER_GAP_FALLBACK_PX = 4;
 
@@ -74,9 +75,8 @@ function readPickerGapPx(): number {
   return PICKER_GAP_FALLBACK_PX;
 }
 
-function measureAvailableBlockSize(results: HTMLElement): number {
-  const rect = results.getBoundingClientRect();
-  return Math.max(0, window.innerHeight - rect.top - readPickerGapPx());
+function measureAvailableBlockSize(triggerBottom: number): number {
+  return Math.max(0, window.innerHeight - triggerBottom - readPickerGapPx());
 }
 
 function CandidateResults({
@@ -215,16 +215,29 @@ export function CandidatePicker({
 
   useLayoutEffect(() => {
     if (!open || mobile) return;
+    const root = rootRef.current;
+    const trigger = triggerRef.current;
     const surface = surfaceRef.current;
-    const results = resultsRef.current;
-    if (!surface || !results) return;
+    if (!root || !trigger || !surface) return;
 
     let frame = 0;
     const measure = () => {
       frame = 0;
+      // A superfície é ancorada ao TRIGGER, não ao fim do wrapper: mede-se a
+      // posição do botão relativa a `.candidate-picker` (seu offset parent),
+      // já que outro conteúdo em fluxo (ex. "Outras escolhas") pode existir
+      // entre os dois.
+      const rootRect = root.getBoundingClientRect();
+      const triggerRect = trigger.getBoundingClientRect();
+      const gap = readPickerGapPx();
+      const blockStart = triggerRect.bottom - rootRect.top + gap;
+      surface.style.setProperty(
+        "--candidate-picker-trigger-block-start",
+        `${blockStart}px`,
+      );
       surface.style.setProperty(
         "--candidate-picker-available-block-size",
-        `${measureAvailableBlockSize(results)}px`,
+        `${measureAvailableBlockSize(triggerRect.bottom)}px`,
       );
     };
     const schedule = () => {

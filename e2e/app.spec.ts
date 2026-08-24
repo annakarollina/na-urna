@@ -242,20 +242,17 @@ test("Candidate Picker desktop: superfície ancorada ao trigger, toggle e scroll
 
   const trigger = page.locator("#candidate-picker-trigger-federal_deputy-1");
   const surface = page.getByRole("dialog", { name: "Deputado Federal" });
-  const pickerWrapper = page.locator(
-    '[data-office="FEDERAL_DEPUTY"] .candidate-picker',
-  );
 
-  // Gap pequeno e consistente: a superfície fica ancorada logo abaixo do
-  // conteúdo em fluxo do wrapper (trigger + "Outras escolhas"), usando
-  // --picker-trigger-gap (0.25rem = 4px a 16px/rem), não um espaço solto.
+  // Gap pequeno e consistente: a superfície fica ancorada ao TRIGGER que a
+  // abre (top = triggerRect.bottom + gap), não ao fim do wrapper — mesmo
+  // havendo "Outras escolhas" entre os dois. Usa --picker-trigger-gap
+  // (0.25rem = 4px a 16px/rem).
   const triggerBox = (await trigger.boundingBox())!;
   const surfaceBox = (await surface.boundingBox())!;
-  const pickerWrapperBox = (await pickerWrapper.boundingBox())!;
   expect(Math.abs(surfaceBox.width - triggerBox.width)).toBeLessThanOrEqual(1);
   expect(Math.abs(surfaceBox.x - triggerBox.x)).toBeLessThanOrEqual(1);
   expect(surfaceBox.y).toBeGreaterThan(triggerBox.y + triggerBox.height);
-  const gap = surfaceBox.y - (pickerWrapperBox.y + pickerWrapperBox.height);
+  const gap = surfaceBox.y - (triggerBox.y + triggerBox.height);
   expect(gap).toBeGreaterThan(0);
   expect(gap).toBeLessThanOrEqual(6);
 
@@ -273,7 +270,6 @@ test("Candidate Picker desktop: superfície ancorada ao trigger, toggle e scroll
 
   const triggerBoxAfterScroll = (await trigger.boundingBox())!;
   const surfaceBoxAfterScroll = (await surface.boundingBox())!;
-  const pickerWrapperBoxAfterScroll = (await pickerWrapper.boundingBox())!;
   expect(
     Math.abs(surfaceBoxAfterScroll.width - triggerBoxAfterScroll.width),
   ).toBeLessThanOrEqual(1);
@@ -285,7 +281,7 @@ test("Candidate Picker desktop: superfície ancorada ao trigger, toggle e scroll
   );
   const gapAfterScroll =
     surfaceBoxAfterScroll.y -
-    (pickerWrapperBoxAfterScroll.y + pickerWrapperBoxAfterScroll.height);
+    (triggerBoxAfterScroll.y + triggerBoxAfterScroll.height);
   expect(Math.abs(gapAfterScroll - gap)).toBeLessThanOrEqual(1);
 });
 
