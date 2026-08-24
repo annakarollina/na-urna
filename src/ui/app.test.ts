@@ -403,8 +403,8 @@ describe("integração da UI Preact", () => {
     await selectCandidate(container, "governor-1", "EXEMPLO GOVERNO");
     expect(container.querySelector('[data-office="GOVERNOR"] .selected-candidate')).not.toBeNull();
 
-    // happy-dom não implementa window.confirm; um mock explícito é necessário
-    // para simular a confirmação destrutiva (permitido pela tarefa).
+    // happy-dom não implementa window.confirm; o mock simula a confirmação
+    // destrutiva exercitada pelo teste.
     const confirmMock = vi.fn();
     vi.stubGlobal("confirm", confirmMock);
 

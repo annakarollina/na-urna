@@ -44,7 +44,7 @@ function GeolocationOption({
           : "Usar minha localização"}
       </button>
       <p id="geolocation-privacy" class="geolocation-privacy">
-        Opcional e privado: a comparação com limites do IBGE acontece neste
+        Opcional. A localização é comparada com a malha das UFs neste
         dispositivo.
       </p>
       {state.locationDetectionStatus === "suggested" && state.suggestedUf ? (

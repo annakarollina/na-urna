@@ -1384,7 +1384,7 @@ progress::-moz-progress-bar {
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
   color: var(--color-text-on-brand);
-  background: color-mix(in srgb, var(--neutral-900) 88%, transparent);
+  background: color-mix(in srgb, var(--color-text) 88%, transparent);
   font-size: 0.78rem;
   text-align: center;
   pointer-events: none;
