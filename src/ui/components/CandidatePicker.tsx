@@ -85,10 +85,25 @@ function measureAvailableBlockSize(triggerBottom: number): number {
 // viewport.
 const MIN_LEGIBLE_RESULTS_PX = 120;
 
-function ensureTriggerFitsInViewport(trigger: HTMLElement, gap: number): void {
+function ensureTriggerFitsInViewport(
+  trigger: HTMLElement,
+  surface: HTMLElement,
+  gap: number,
+): void {
+  // O mínimo legível cobre só a lista de resultados; cabeçalho e filtros
+  // (header + tools) também ocupam espaço vertical dentro da mesma
+  // superfície e precisam ser somados, senão a superfície inteira pode
+  // ficar parcialmente abaixo do viewport mesmo com o mínimo "cabendo".
+  const chromeHeight = [
+    ".candidate-picker-header",
+    ".candidate-picker-tools",
+  ].reduce((total, selector) => {
+    const element = surface.querySelector(selector);
+    return total + (element ? element.getBoundingClientRect().height : 0);
+  }, 0);
   const triggerRect = trigger.getBoundingClientRect();
   const available = window.innerHeight - triggerRect.bottom - gap;
-  const shortfall = MIN_LEGIBLE_RESULTS_PX - available;
+  const shortfall = chromeHeight + MIN_LEGIBLE_RESULTS_PX - available;
   if (shortfall > 0) {
     window.scrollBy(0, shortfall);
   }
@@ -231,7 +246,7 @@ export function CandidatePicker({
     // página o suficiente para caber um mínimo legível. Só roda ao abrir —
     // scroll/resize subsequentes apenas recalculam a geometria (abaixo),
     // sem voltar a mover a página, para não competir com o scroll do usuário.
-    ensureTriggerFitsInViewport(trigger, readPickerGapPx());
+    ensureTriggerFitsInViewport(trigger, surface, readPickerGapPx());
 
     let frame = 0;
     const measure = () => {
