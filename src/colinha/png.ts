@@ -62,24 +62,46 @@ function fitText(
   return `${result.trimEnd()}…`;
 }
 
-function drawCoverImage(
+export interface ContainFit {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export function fitImageContain(
+  source: { readonly width: number; readonly height: number },
+  box: Rectangle,
+): ContainFit {
+  const scale = Math.min(
+    box.width / source.width,
+    box.height / source.height,
+  );
+  const width = source.width * scale;
+  const height = source.height * scale;
+  return {
+    x: box.x + (box.width - width) / 2,
+    y: box.y + (box.height - height) / 2,
+    width,
+    height,
+  };
+}
+
+function drawContainImage(
   context: CanvasRenderingContext2D,
   image: HTMLImageElement,
   rectangle: Rectangle,
 ): void {
-  const scale = Math.max(
-    rectangle.width / image.naturalWidth,
-    rectangle.height / image.naturalHeight,
+  fillRoundedRectangle(context, rectangle, 12, PNG_PALETTE.photoSurface);
+  const fit = fitImageContain(
+    { width: image.naturalWidth, height: image.naturalHeight },
+    rectangle,
   );
-  const width = image.naturalWidth * scale;
-  const height = image.naturalHeight * scale;
-  const x = rectangle.x + (rectangle.width - width) / 2;
-  const y = rectangle.y + (rectangle.height - height) / 2;
 
   context.save();
   roundedRectangle(context, rectangle, 12);
   context.clip();
-  context.drawImage(image, x, y, width, height);
+  context.drawImage(image, fit.x, fit.y, fit.width, fit.height);
   context.restore();
 }
 
@@ -228,37 +250,43 @@ function drawRow(
     return;
   }
 
+  const photoWidth = 100;
   const photoRectangle = {
-    x: rectangle.x + 28,
+    x: rectangle.x + rectangle.width - 28 - photoWidth,
     y: rectangle.y + 68,
-    width: 120,
+    width: photoWidth,
     height: 132,
   };
   if (photo) {
-    drawCoverImage(context, photo, photoRectangle);
+    drawContainImage(context, photo, photoRectangle);
   } else {
     drawMissingPhoto(context, photoRectangle);
   }
 
-  const textX = rectangle.x + 176;
+  const textX = rectangle.x + 78;
+  const textMaxWidth = photoRectangle.x - 24 - textX;
   context.fillStyle = PNG_PALETTE.brandStrong;
   context.font = "900 76px system-ui, sans-serif";
   context.fillText(row.choice.number, textX, rectangle.y + 133);
   context.fillStyle = PNG_PALETTE.text;
   context.font = "800 31px system-ui, sans-serif";
   context.fillText(
-    fitText(context, row.choice.ballotName, rectangle.width - 210),
+    fitText(context, row.choice.ballotName, textMaxWidth),
     textX,
     rectangle.y + 174,
   );
   context.fillStyle = PNG_PALETTE.textMuted;
   context.font = "600 24px system-ui, sans-serif";
-  context.fillText(row.choice.party, textX, rectangle.y + 204);
+  context.fillText(
+    fitText(context, row.choice.party, textMaxWidth),
+    textX,
+    rectangle.y + 204,
+  );
   if (row.choice.pendingOrAmbiguous) {
     context.fillStyle = PNG_PALETTE.warningText;
     context.font = "700 19px system-ui, sans-serif";
     context.fillText(
-      "Situação ainda não definitiva",
+      fitText(context, "Situação ainda não definitiva", textMaxWidth),
       textX,
       rectangle.y + 230,
     );

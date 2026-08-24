@@ -280,6 +280,51 @@ describe("composição do modelo da colinha", () => {
     expect(model.rows[5]?.choice).toBeNull();
   });
 
+  it("distingue posição não preenchida (EMPTY) de voto em branco (BLANK)", () => {
+    const { session, candidates } = completeSession({
+      scope: TERRITORIAL_SCOPE.STATE,
+      uf: "SP",
+    });
+    const selections = { ...session.selections };
+    delete selections["FEDERAL_DEPUTY:1"];
+    selections["STATE_DEPUTY:1"] = { type: VOTE_CHOICE_TYPE.BLANK };
+
+    const model = composeColinhaModel({ ...session, selections }, candidates);
+
+    expect(model.rows[0]?.choice).toBeNull();
+    expect(model.rows[1]?.choice).toEqual({ type: VOTE_CHOICE_TYPE.BLANK });
+  });
+
+  it("compõe uma colinha parcial sem erro, preservando slots vazios", () => {
+    const { session, candidates } = completeSession({
+      scope: TERRITORIAL_SCOPE.STATE,
+      uf: "SP",
+    });
+    const model = composeColinhaModel(
+      {
+        ...session,
+        selections: {
+          "FEDERAL_DEPUTY:1": session.selections["FEDERAL_DEPUTY:1"]!,
+          "STATE_DEPUTY:1": {
+            type: VOTE_CHOICE_TYPE.PARTY,
+            party: "ABC",
+            partyNumber: "13",
+          },
+          "SENATOR:1": { type: VOTE_CHOICE_TYPE.BLANK },
+        },
+      },
+      candidates,
+    );
+
+    expect(model.rows).toHaveLength(6);
+    expect(model.rows[0]?.choice?.type).toBe(VOTE_CHOICE_TYPE.CANDIDATE);
+    expect(model.rows[1]?.choice?.type).toBe(VOTE_CHOICE_TYPE.PARTY);
+    expect(model.rows[2]?.choice).toEqual({ type: VOTE_CHOICE_TYPE.BLANK });
+    expect(model.rows[3]?.choice).toBeNull();
+    expect(model.rows[4]?.choice).toBeNull();
+    expect(model.rows[5]?.choice).toBeNull();
+  });
+
   it("rejeita data inválida de atualização", () => {
     const { session, candidates } = completeSession({
       scope: TERRITORIAL_SCOPE.STATE,
