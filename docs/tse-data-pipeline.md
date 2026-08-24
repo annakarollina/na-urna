@@ -1,4 +1,4 @@
-# 07 — Pipeline TSE 2026
+# Pipeline de dados do TSE — 2026
 
 ## 1. Recursos inspecionados
 

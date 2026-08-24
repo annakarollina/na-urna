@@ -1,59 +1,63 @@
 # Minha Colinha
 
-Aplicação web single-page, aberta e auditável, para montar uma colinha eleitoral a partir de dados oficiais da Justiça Eleitoral e exportá-la como imagem. A aplicação não exige conta, não persiste as escolhas do usuário e não envia a colinha para um servidor de aplicação.
+[Acessar a aplicação](https://predocampos.github.io/minha-colinha/)
 
-## Princípios do projeto
+Aplicação web aberta e auditável para montar uma colinha das Eleições Gerais de 2026 com dados oficiais e exportá-la como imagem no próprio dispositivo.
 
-1. **Privacidade por arquitetura** — a composição da colinha e as escolhas dos candidatos não são enviadas como dados de aplicação nem persistidas pelo projeto. Coordenadas permanecem no dispositivo. A circunscrição pode ser tecnicamente inferível pela hospedagem quando o navegador solicita arquivos públicos separados por UF/município; essa limitação deve ser documentada, não escondida.
-2. **Fonte oficial** — candidatos, números, partidos, situação eleitoral e fotografias são derivados de dados oficiais do TSE.
-3. **Neutralidade** — o sistema não recomenda, ranqueia, favorece ou personaliza candidatos.
-4. **Auditabilidade** — código, configuração eleitoral, pipeline de transformação e origem dos dados são públicos e verificáveis.
-5. **Minimização** — a aplicação pede apenas a localização eleitoral necessária para a eleição corrente.
-6. **Simplicidade** — SPA estática, dependências mínimas, sem conta, banco de dados, analytics ou backend de negócio.
-7. **Falha segura** — dados inconsistentes, incompletos ou não validados não devem ser apresentados silenciosamente como corretos.
+## Problema
 
-## O que a aplicação faz
+A votação de 2026 reúne seis posições em uma ordem definida, incluindo duas escolhas distintas para o Senado. A Minha Colinha ajuda a localizar candidaturas da UF, revisar números e gerar uma referência visual sem criar conta ou entregar as escolhas a um servidor de aplicação.
 
-Em um ano eleitoral suportado, a aplicação:
+## Confiança e privacidade
 
-1. identifica a configuração eleitoral correspondente ao ano;
-2. determina se precisa de UF ou de UF + município;
-3. permite preencher essa informação manualmente ou sugeri-la por geolocalização, sempre com confirmação do usuário;
-4. carrega somente os candidatos pertinentes à circunscrição e aos cargos da eleição;
-5. apresenta candidaturas em ordem neutra, com busca por prefixo e filtro de partido;
-6. permite registrar candidatura, legenda quando legalmente aplicável ou voto em branco;
-7. monta a colinha na ordem oficial de votação;
-8. baixa ou, quando suportado pelo navegador, compartilha a imagem gerada localmente; posições não escolhidas podem aparecer como não preenchidas ou ser omitidas por opção do usuário.
+As escolhas ficam somente na memória da página e desaparecem ao recarregar ou fechar. A composição e o PNG são gerados no navegador; não há analytics, conta, banco de colinhas ou parâmetros de URL com intenção de voto. A geolocalização é opcional: as coordenadas são comparadas localmente com uma malha do IBGE e a UF sugerida precisa ser confirmada.
 
-Em anos sem eleição suportada, a aplicação apenas informa que não há pleito configurado e pode indicar a próxima eleição prevista na configuração do projeto.
+Como em qualquer site estático, o GitHub Pages e sua CDN podem manter logs técnicos das requisições. Os caminhos dos arquivos podem tornar a UF e o interesse por determinados arquivos inferíveis, mas a aplicação não envia um registro da colinha nem instrumenta seleções. Os limites completos estão no [modelo de privacidade e confiança](docs/privacy-and-trust-model.md).
 
-## O que a aplicação não faz
+## Como funciona
 
-- não recomenda candidato;
-- não mostra popularidade, tendências ou “mais escolhidos”;
-- não registra intenção de voto;
-- não possui conta ou login;
-- não salva colinhas no servidor;
-- não utiliza analytics, pixels ou trackers de terceiros;
-- não exige impressão;
-- não consulta coordenadas em serviço externo de geocodificação;
-- não trata a localização física como domicílio eleitoral sem confirmação do usuário.
+1. A pessoa confirma a UF manualmente ou aceita uma sugestão local por geolocalização.
+2. O navegador carrega os arquivos oficiais necessários para os cargos daquela UF e para Presidente.
+3. Busca, filtros e escolhas funcionam localmente, em ordem neutra e sem persistência.
+4. A revisão preserva a ordem oficial e permite baixar ou compartilhar um PNG gerado por Canvas.
 
-## Documentação
+## Arquitetura
 
-- [01 — Visão e escopo](docs/01-visao-e-escopo.md)
-- [02 — Regras de negócio](docs/02-regras-de-negocio.md)
-- [03 — Arquitetura](docs/03-arquitetura.md)
-- [04 — Modelo de dados](docs/04-modelo-de-dados.md)
-- [05 — Fluxos](docs/05-fluxos.md)
-- [06 — Privacidade e segurança](docs/06-privacidade-e-seguranca.md)
-- [07 — Pipeline TSE 2026](docs/07-pipeline-tse-2026.md)
-- [ADRs — decisões arquiteturais](docs/adr/README.md)
-- [Política de segurança](SECURITY.md)
+```text
+TSE / IBGE → GitHub Actions → pipeline validado → snapshot estático → GitHub Pages
+                                                                       ↓
+                    PNG / Web Share ← Canvas ← escolhas em memória ← navegador
+```
+
+A publicação é atômica: falhas de download, interpretação, validação, testes, build ou verificação impedem um novo deploy, mantendo disponível a última versão válida. Veja a [arquitetura](docs/architecture.md) e o [pipeline TSE](docs/tse-data-pipeline.md).
+
+## Tecnologias e motivos
+
+- **TypeScript** mantém explícitos os contratos eleitorais e de dados.
+- **Preact** oferece componentes declarativos com bundle pequeno.
+- **Vite** fornece desenvolvimento e build estático com base compatível com GitHub Pages.
+- **Canvas e Web Share nativos** geram e entregam a imagem sem serviço de renderização.
+- **Vitest e Playwright** cobrem domínio, componentes e fluxos reais em Chromium e WebKit.
+- **GitHub Actions e Pages** executam o pipeline e publicam o site sem backend de negócio.
+
+## Dados eleitorais
+
+O pipeline usa o conjunto oficial [Candidatos — 2026](https://dadosabertos.tse.jus.br/dataset/candidatos-2026), do TSE, incluindo dados de candidaturas, situações e fotografias. O catálogo informa atualização até quatro vezes ao dia. Este projeto atualiza o snapshot diariamente às 05:23 BRT e também em pushes para `main` ou execução manual.
+
+Os metadados publicados distinguem quando os arquivos de origem foram gerados pelo TSE (`sourceGeneratedAt`) de quando foram importados pelo projeto (`importedAt`). O PNG apresenta a data de geração da fonte. A transformação completa, códigos aceitos, associação das fotos, atomicidade e hashes estão documentados no [pipeline TSE](docs/tse-data-pipeline.md).
+
+## Limitações e decisões conscientes
+
+- somente as Eleições Gerais de 2026 estão configuradas;
+- recarregar ou fechar a página apaga as escolhas;
+- pode haver atraso entre uma atualização do TSE e o próximo snapshot diário do projeto;
+- se o pipeline falhar, permanece publicada a última versão válida;
+- requisições estáticas podem revelar a UF e interesse por arquivos ou fotos ao provedor de hospedagem;
+- compartilhamento direto depende do suporte do navegador a Web Share com arquivos; o download continua disponível.
 
 ## Desenvolvimento local
 
-Requer Node.js 20.19 ou mais recente. Em um clone novo:
+Requer Node.js 20.19 ou mais recente.
 
 ```bash
 npm ci
@@ -61,54 +65,24 @@ npm run data:tse
 npm run dev
 ```
 
-`npm run data:tse` obtém e valida o snapshot oficial necessário para exercitar o fluxo completo; se um snapshot válido já existir localmente, ele não precisa ser gerado a cada inicialização. `npm run build` cria o bundle de produção e `npm run preview` o serve localmente sob o caminho `/minha-colinha/`.
+`npm run data:tse` baixa e valida o snapshot oficial. Para usar ZIPs oficiais já obtidos, execute `npm run data:tse -- --input-dir <diretório>`. `npm run check` executa tipos, lint, testes e build; `npm run test:e2e` executa os fluxos de navegador após a instalação do Chromium e WebKit pelo Playwright.
 
-Os testes rápidos continuam em `npm run check`. A cobertura de navegador real usa Playwright com Chromium desktop, Chromium mobile/touch e WebKit mobile/touch:
+As fixtures em `public/data/development-fixtures/` são fictícias, usadas apenas em desenvolvimento e testes, e excluídas do build de produção.
 
-```bash
-npx playwright install chromium webkit
-npm run test:e2e
-```
+## Documentação
 
-O servidor E2E ativa as fixtures fictícias por um modo Vite exclusivo de teste; produção continua usando somente o snapshot oficial. As comparações visuais versionadas têm Windows como ambiente canônico e são ignoradas em outras plataformas, onde os fluxos comportamentais permanecem obrigatórios.
+- [Índice da documentação](docs/README.md)
+- [Arquitetura](docs/architecture.md)
+- [Regras de negócio](docs/business-rules.md)
+- [Modelo de privacidade e confiança](docs/privacy-and-trust-model.md)
+- [Pipeline de dados do TSE](docs/tse-data-pipeline.md)
+- [Decisões arquiteturais](docs/adr/README.md)
+- [Política de segurança](SECURITY.md)
 
-## Pipeline de dados oficiais
+## Independência e atribuições
 
-O adaptador 2026 baixa os recursos oficiais, interpreta CSV ISO-8859-1, associa as fotos por `SQ_CANDIDATO`, normaliza para o contrato interno e só então troca o snapshot publicado:
+A Minha Colinha é um projeto independente, não oficial e sem vínculo ou endosso do TSE ou do IBGE. Dados eleitorais, fotografias e limites territoriais preservam as condições de suas fontes; detalhes e proveniência estão em [ATTRIBUTIONS.txt](public/ATTRIBUTIONS.txt).
 
-```bash
-npm run data:tse
-```
+## Licença
 
-Para ZIPs oficiais já baixados, use `npm run data:tse -- --input-dir <diretório>`.
-
-`public/data/2026/` é um artefato gerado e ignorado pelo Git. No GitHub Pages, o workflow baixa e valida os dados oficiais, executa o build com o snapshot completo e publica o diretório `dist` somente quando todas as etapas terminam com sucesso. A atualização ocorre em pushes para `main`, uma vez por dia e sob execução manual, sem commit automático ou PR de dados e fotografias.
-
-A SPA usa esse snapshot oficial como fonte padrão em runtime: lê os metadados de procedência, baixa somente os cinco arquivos de candidatos necessários para a UF escolhida (quatro estaduais e Presidente em `BR`) e carrega fotos locais sob demanda. As fixtures em `public/data/development-fixtures/` exigem ativação explícita em código de desenvolvimento ou teste e são removidas do build de produção.
-
-## Publicação no GitHub Pages
-
-O repositório deve usar **GitHub Actions** como fonte do Pages. Um push para `main`, o agendamento diário às 05:23 BRT ou `workflow_dispatch` inicia o mesmo fluxo atômico: instalação, obtenção e validação dos dados do TSE, checks, build, verificação do artefato e deploy. A etapa de publicação só é alcançada após todas as anteriores passarem; o workflow não possui permissão nem comandos para criar commits ou pull requests.
-
-O `base` do Vite está configurado como `/minha-colinha/`. Para outro nome de repositório, esse valor precisa ser ajustado antes da publicação.
-
-## Geolocalização opcional
-
-A escolha manual de UF é o fluxo principal. Após ação explícita, a aplicação pode solicitar a Geolocation API e comparar as coordenadas localmente com uma malha estadual mínima derivada do IBGE. Apenas a UF sugerida permanece no estado da interface; ela precisa ser confirmada antes do carregamento de candidatos. Nenhuma coordenada é enviada a serviço de mapas, geocodificação ou IP.
-
-O artefato `public/geography/ibge-uf-minimum.json` é versionado, registra URL, obtenção e SHA-256 da resposta oficial e pode ser reproduzido com `npm run data:geography`.
-
-## Referências oficiais principais
-
-- TSE — Candidatos 2026: https://dadosabertos.tse.jus.br/dataset/candidatos-2026
-- TSE — Resolução nº 23.751/2026: https://www.tse.jus.br/legislacao/compilada/res/2026/resolucao-no-23-751-de-26-de-fevereiro-de-2026
-- TSE — Calendário Eleitoral 2026: https://www.tse.jus.br/legislacao/compilada/res/2026/resolucao-no-23-750-de-26-de-fevereiro-de-2026
-- IBGE — Malhas Territoriais: https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais/15774-malhas.html
-
-## Licença e atribuições
-
-O código é distribuído sob a [licença MIT](LICENSE). Dados eleitorais, fotografias e limites territoriais mantêm suas condições de origem e não são relicenciados pela licença do código. As fontes, transformações e atribuições estão registradas em [ATTRIBUTIONS.txt](public/ATTRIBUTIONS.txt), que também acompanha o artefato publicado.
-
-## Estado da documentação
-
-Este conjunto acompanha a arquitetura e as regras implementadas. Decisões técnicas que mudem garantias de privacidade, fonte de dados, persistência, neutralidade ou modelo de distribuição devem ser registradas em ADR.
+O código é distribuído sob a [licença MIT](LICENSE). A licença do código não relicencia os dados e artefatos de terceiros.

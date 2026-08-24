@@ -10,7 +10,7 @@ O TSE publica dados abertos de candidaturas e fotografias. Consultar a fonte ofi
 
 Um pipeline periódico importará a fonte oficial, validará, normalizará e publicará snapshots estáticos consumidos pela SPA.
 
-Para 2026, o conjunto “Candidatos — 2026” informa frequência de atualização diária; o pipeline acompanhará essa frequência durante o período relevante.
+Para 2026, o catálogo “Candidatos — 2026” informa atualização até quatro vezes ao dia. O projeto gera um snapshot diariamente às 05:23 BRT e também em pushes para `main` ou acionamento manual; portanto, pode existir atraso em relação à fonte.
 
 ## Alternativas consideradas
 

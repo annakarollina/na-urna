@@ -25,10 +25,11 @@ O ano atual apenas seleciona uma configuração existente; ele não inventa uma 
 ### Positivas
 
 - regras ficam auditáveis;
-- eleições futuras podem ser adicionadas sem reescrever a UI;
+- a estrutura declarativa reduz lógica eleitoral espalhada pela UI;
 - exceções como Deputado Distrital no DF ficam explícitas.
 
 ### Negativas
 
 - cada novo pleito precisa ser revisado e configurado;
+- a interface, o pipeline e as regras atuais continuam específicos para 2026 e exigem trabalho explícito para outro pleito;
 - erros na configuração podem afetar a interface, exigindo testes contra fonte oficial.

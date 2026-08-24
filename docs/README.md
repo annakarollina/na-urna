@@ -1,22 +1,9 @@
-# Architecture Decision Records (ADRs)
+# Documentação
 
-ADRs registram decisões estruturais cujo motivo pode não ser óbvio no futuro. Não devem ser usados para detalhes triviais de implementação.
+- [Arquitetura](architecture.md) — componentes, contratos e fluxos implementados.
+- [Regras de negócio](business-rules.md) — comportamento eleitoral e critérios de validação de 2026.
+- [Modelo de privacidade e confiança](privacy-and-trust-model.md) — fronteiras, controles e limitações.
+- [Pipeline de dados do TSE](tse-data-pipeline.md) — fontes, normalização, fotos e publicação atômica.
+- [ADRs](adr/README.md) — decisões arquiteturais e suas consequências.
 
-## Formato
-
-Cada ADR contém:
-
-- Status;
-- Contexto;
-- Decisão;
-- Alternativas consideradas;
-- Consequências.
-
-## ADRs iniciais
-
-- [ADR-001 — SPA estática sem backend de negócio](001-spa-estatica.md)
-- [ADR-002 — Não persistir escolhas eleitorais](002-sem-persistencia-de-escolhas.md)
-- [ADR-003 — Espelhar e normalizar dados do TSE](003-snapshot-tse.md)
-- [ADR-004 — Geolocalização com resolução territorial local](004-geolocalizacao-local.md)
-- [ADR-005 — Configuração eleitoral declarativa](005-configuracao-eleitoral-declarativa.md)
-- [ADR-006 — Fotografias oficiais como dado essencial](006-fotos-oficiais.md)
+Também estão na raiz a [política de segurança](../SECURITY.md), a [licença](../LICENSE) e o [README principal](../README.md).
