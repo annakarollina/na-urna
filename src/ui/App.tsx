@@ -513,12 +513,6 @@ function ConfiguredApplication({
                 selectState(suggestedUf);
               }
             }}
-            onRejectSuggestion={() => {
-              resetLocationDetection(state);
-              state.announcement = "Sugestão descartada. Escolha sua UF manualmente.";
-              refresh();
-              focusAfterRender("voting-state");
-            }}
           />
           {state.session ? (
             <>

@@ -14,20 +14,15 @@ interface LocationPickerProps {
   onEdit: () => void;
   onRequestLocation: () => void;
   onConfirmSuggestion: () => void;
-  onRejectSuggestion: () => void;
 }
 
 function GeolocationOption({
   state,
   onRequestLocation,
   onConfirmSuggestion,
-  onRejectSuggestion,
 }: Pick<
   LocationPickerProps,
-  | "state"
-  | "onRequestLocation"
-  | "onConfirmSuggestion"
-  | "onRejectSuggestion"
+  "state" | "onRequestLocation" | "onConfirmSuggestion"
 >) {
   return (
     <div
@@ -66,13 +61,6 @@ function GeolocationOption({
             >
               <CheckIcon />
               Confirmar {state.suggestedUf}
-            </button>
-            <button
-              type="button"
-              class="text-button"
-              onClick={onRejectSuggestion}
-            >
-              Escolher outra UF manualmente
             </button>
           </div>
         </div>
@@ -138,7 +126,6 @@ function LocationForm(props: LocationPickerProps) {
         state={props.state}
         onRequestLocation={props.onRequestLocation}
         onConfirmSuggestion={props.onConfirmSuggestion}
-        onRejectSuggestion={props.onRejectSuggestion}
       />
     </form>
   );
