@@ -49,7 +49,9 @@ describe("CandidatePhoto", () => {
     const firstImage = container.querySelector("img");
     expect(firstImage?.getAttribute("src")).toContain("data/photos/a.jpg");
 
-    act(() => firstImage?.dispatchEvent(new Event("error")));
+    act(() => {
+      firstImage?.dispatchEvent(new Event("error"));
+    });
     expect(container.querySelector("img")).toBeNull();
     expect(container.textContent).toContain("Falha ao carregar a foto");
 
