@@ -79,6 +79,21 @@ function measureAvailableBlockSize(triggerBottom: number): number {
   return Math.max(0, window.innerHeight - triggerBottom - readPickerGapPx());
 }
 
+// Altura mínima legível para a lista de resultados: o suficiente para mostrar
+// ao menos uma fração de um card de candidato, evitando abrir a superfície
+// sem nenhum resultado visível quando o trigger está perto do fim do
+// viewport.
+const MIN_LEGIBLE_RESULTS_PX = 120;
+
+function ensureTriggerFitsInViewport(trigger: HTMLElement, gap: number): void {
+  const triggerRect = trigger.getBoundingClientRect();
+  const available = window.innerHeight - triggerRect.bottom - gap;
+  const shortfall = MIN_LEGIBLE_RESULTS_PX - available;
+  if (shortfall > 0) {
+    window.scrollBy(0, shortfall);
+  }
+}
+
 function CandidateResults({
   candidates,
   replacing,
@@ -124,28 +139,20 @@ function CandidateResults({
   );
 }
 
-function AlternativeChoices({
-  slot,
+function VoteBlankAction({
   onNonCandidate,
-}: Pick<CandidatePickerProps, "slot" | "onNonCandidate">) {
+}: Pick<CandidatePickerProps, "onNonCandidate">) {
   return (
-    <div
-      class="alternative-choices"
-      role="group"
-      aria-label={`Outras escolhas para ${slot.label}`}
-    >
-      <span class="alternative-label">Outras escolhas</span>
-      <div class="alternative-actions">
-        <button
-          type="button"
-          class="text-button"
-          onClick={() =>
-            onNonCandidate({ type: VOTE_CHOICE_TYPE.BLANK }, "Voto em branco")
-          }
-        >
-          Votar em branco
-        </button>
-      </div>
+    <div class="vote-blank-action">
+      <button
+        type="button"
+        class="text-button"
+        onClick={() =>
+          onNonCandidate({ type: VOTE_CHOICE_TYPE.BLANK }, "Voto em branco")
+        }
+      >
+        Votar em branco
+      </button>
     </div>
   );
 }
@@ -215,25 +222,39 @@ export function CandidatePicker({
 
   useLayoutEffect(() => {
     if (!open || mobile) return;
-    const root = rootRef.current;
     const trigger = triggerRef.current;
     const surface = surfaceRef.current;
-    if (!root || !trigger || !surface) return;
+    if (!trigger || !surface) return;
+
+    // Ajuste de scroll de abertura, uma única vez: se o trigger estiver perto
+    // demais do fim do viewport para mostrar qualquer resultado, rola a
+    // página o suficiente para caber um mínimo legível. Só roda ao abrir —
+    // scroll/resize subsequentes apenas recalculam a geometria (abaixo),
+    // sem voltar a mover a página, para não competir com o scroll do usuário.
+    ensureTriggerFitsInViewport(trigger, readPickerGapPx());
 
     let frame = 0;
     const measure = () => {
       frame = 0;
-      // A superfície é ancorada ao TRIGGER, não ao fim do wrapper: mede-se a
-      // posição do botão relativa a `.candidate-picker` (seu offset parent),
-      // já que outro conteúdo em fluxo (ex. "Outras escolhas") pode existir
-      // entre os dois.
-      const rootRect = root.getBoundingClientRect();
+      // A superfície é `position: fixed` (não `absolute`): fica fora do fluxo
+      // rolável do documento, o que evita um salto de scroll nativo do
+      // navegador ao fechar o picker com a página no topo (foco sendo
+      // devolvido a partir de um elemento que acabou de ficar `hidden`).
+      // Por isso a geometria é sempre relativa ao viewport, ancorada ao
+      // TRIGGER: top = triggerRect.bottom + gap, left/width = do trigger.
       const triggerRect = trigger.getBoundingClientRect();
       const gap = readPickerGapPx();
-      const blockStart = triggerRect.bottom - rootRect.top + gap;
+      surface.style.setProperty(
+        "--candidate-picker-trigger-inline-start",
+        `${triggerRect.left}px`,
+      );
+      surface.style.setProperty(
+        "--candidate-picker-trigger-inline-size",
+        `${triggerRect.width}px`,
+      );
       surface.style.setProperty(
         "--candidate-picker-trigger-block-start",
-        `${blockStart}px`,
+        `${triggerRect.bottom + gap}px`,
       );
       surface.style.setProperty(
         "--candidate-picker-available-block-size",
@@ -296,6 +317,7 @@ export function CandidatePicker({
 
   return (
     <div class="candidate-picker" ref={rootRef}>
+      <VoteBlankAction onNonCandidate={onNonCandidate} />
       <button
         ref={triggerRef}
         id={triggerId}
@@ -309,7 +331,6 @@ export function CandidatePicker({
         <SearchIcon />
         {replacing ? "Escolher outro candidato" : "Escolher candidato"}
       </button>
-      <AlternativeChoices slot={slot} onNonCandidate={onNonCandidate} />
       <div
         ref={surfaceRef}
         class="candidate-picker-surface"

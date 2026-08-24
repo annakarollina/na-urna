@@ -184,7 +184,7 @@ describe("integração da UI Preact", () => {
 
     expect(
       container.querySelector<HTMLButtonElement>(
-        '[data-office="FEDERAL_DEPUTY"] .alternative-actions button',
+        '[data-office="FEDERAL_DEPUTY"] .vote-blank-action button',
       )?.textContent,
     ).toContain("Votar em branco");
     expect(container.textContent).not.toContain("Votar nulo");

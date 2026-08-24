@@ -474,6 +474,12 @@ select {
   min-height: 3rem;
 }
 
+.vote-blank-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-1);
+}
+
 .candidate-picker-surface {
   z-index: 40;
   display: grid;
@@ -493,9 +499,10 @@ select {
 }
 
 .candidate-picker-surface[data-mode="desktop"] {
-  position: absolute;
-  inset-inline: 0;
+  position: fixed;
+  inset-inline-start: var(--candidate-picker-trigger-inline-start, 0);
   inset-block-start: var(--candidate-picker-trigger-block-start, calc(100% + var(--picker-trigger-gap)));
+  inline-size: var(--candidate-picker-trigger-inline-size, 100%);
 }
 
 .candidate-picker-surface[data-mode="mobile"] {
@@ -925,34 +932,9 @@ progress::-moz-progress-bar {
   text-transform: uppercase;
 }
 
-.alternative-choices {
-  margin-top: var(--space-3);
-}
-
-.alternative-label {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: var(--color-text-subtle);
-  font-size: 0.72rem;
-  font-weight: var(--font-weight-extra-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.alternative-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.15rem;
-  align-items: center;
-}
-
-.alternative-actions > .text-button {
-  flex: 0 1 auto;
+.vote-blank-action .text-button {
   min-width: 0;
   padding-inline: 0.35rem;
-}
-
-.alternative-actions .text-button {
   color: var(--color-text-muted);
   font-size: clamp(0.68rem, 0.62rem + 0.3vw, 0.82rem);
   white-space: nowrap;

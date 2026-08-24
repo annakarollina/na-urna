@@ -244,9 +244,9 @@ test("Candidate Picker desktop: superfície ancorada ao trigger, toggle e scroll
   const surface = page.getByRole("dialog", { name: "Deputado Federal" });
 
   // Gap pequeno e consistente: a superfície fica ancorada ao TRIGGER que a
-  // abre (top = triggerRect.bottom + gap), não ao fim do wrapper — mesmo
-  // havendo "Outras escolhas" entre os dois. Usa --picker-trigger-gap
-  // (0.25rem = 4px a 16px/rem).
+  // abre (top = triggerRect.bottom + gap), não ao fim do wrapper. "Votar em
+  // branco" fica antes do trigger no fluxo, então nunca compete por espaço
+  // com a superfície. Usa --picker-trigger-gap (0.25rem = 4px a 16px/rem).
   const triggerBox = (await trigger.boundingBox())!;
   const surfaceBox = (await surface.boundingBox())!;
   expect(Math.abs(surfaceBox.width - triggerBox.width)).toBeLessThanOrEqual(1);
@@ -418,22 +418,26 @@ test("ações de escolha preservam a posição da página", async ({ page }) => 
   // recolher para a escolha em branco. A estabilidade de scroll durante essa
   // expansão é responsabilidade da geometria do picker (Etapa 2); aqui
   // validamos apenas que a transição de estado A → BLANK funciona.
+  // "Votar em branco" fica acima do trigger (Etapa 2.1), então continua
+  // clicável com o picker ainda aberto.
   await slot.getByRole("button", { name: /^Alterar escolha de Deputado Federal/ }).click();
   await slot.getByRole("button", { name: "Votar em branco" }).click();
   await expect(slot.getByText("BRANCO", { exact: true })).toBeVisible();
 
-  await expectActionToPreserveScroll(page, async () => {
-    await slot.getByRole("button", { name: /^Alterar escolha de Deputado Federal/ }).click();
-    await expect(
-      page.getByRole("searchbox", { name: "Nome ou número" }),
-    ).toBeVisible();
-    await page
-      .getByRole("button", { name: "Fechar seleção de Deputado Federal" })
-      .click();
-    await expect(
-      page.getByRole("searchbox", { name: "Nome ou número" }),
-    ).toBeHidden();
-  });
+  // Fora do wrapper de preservação de scroll de propósito: quando o trigger
+  // está perto do fim do viewport, a abertura do picker rola a página o
+  // suficiente para caber um mínimo legível de resultados (Etapa 2.1) — um
+  // ajuste de scroll intencional, não uma instabilidade a ser proibida.
+  await slot.getByRole("button", { name: /^Alterar escolha de Deputado Federal/ }).click();
+  await expect(
+    page.getByRole("searchbox", { name: "Nome ou número" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Fechar seleção de Deputado Federal" })
+    .click();
+  await expect(
+    page.getByRole("searchbox", { name: "Nome ou número" }),
+  ).toBeHidden();
 });
 
 test("baseline visual das telas principais", async ({ page }) => {
