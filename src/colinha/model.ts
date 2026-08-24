@@ -58,7 +58,7 @@ export interface ColinhaModel {
 
 export interface ComposeColinhaOptions {
   readonly notice?: string | null;
-  readonly snapshotImportedAt?: string | null;
+  readonly snapshotSourceGeneratedAt?: string | null;
   readonly omitEmptyRows?: boolean;
 }
 
@@ -78,19 +78,21 @@ function electionLocationLabel(session: SelectionSession): string {
   return `${electionName} ${session.election.year} · ${location}`;
 }
 
-function dataUpdatedLabel(importedAt: string | null | undefined): string | null {
-  if (!importedAt) {
+function dataGeneratedLabel(
+  sourceGeneratedAt: string | null | undefined,
+): string | null {
+  if (!sourceGeneratedAt) {
     return null;
   }
-  const importedDate = new Date(importedAt);
-  if (Number.isNaN(importedDate.getTime())) {
-    throw new Error("A data de atualização do snapshot é inválida.");
+  const sourceGeneratedDate = new Date(sourceGeneratedAt);
+  if (Number.isNaN(sourceGeneratedDate.getTime())) {
+    throw new Error("A data de geração da fonte do snapshot é inválida.");
   }
   const formattedDate = new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     timeZone: "America/Sao_Paulo",
-  }).format(importedDate);
-  return `Dados do TSE atualizados em ${formattedDate}`;
+  }).format(sourceGeneratedDate);
+  return `Dados do TSE gerados em ${formattedDate}`;
 }
 
 export function composeColinhaModel(
@@ -144,7 +146,7 @@ export function composeColinhaModel(
     title: "Minha Colinha",
     electionLocationLabel: electionLocationLabel(session),
     notice: options.notice ?? null,
-    dataUpdatedLabel: dataUpdatedLabel(options.snapshotImportedAt),
+    dataUpdatedLabel: dataGeneratedLabel(options.snapshotSourceGeneratedAt),
     rows: options.omitEmptyRows
       ? rows.filter(({ choice }) => choice !== null)
       : rows,

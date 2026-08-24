@@ -13,7 +13,11 @@ import { publicPath } from "../../shared/paths.ts";
 import { XCircleIcon } from "./Icon.tsx";
 
 export function CandidatePhoto({ candidate }: { candidate: Candidate }) {
-  const [failed, setFailed] = useState(false);
+  const photoIdentity = `${candidate.id}:${candidate.photoPath ?? ""}`;
+  const [failedPhotoIdentity, setFailedPhotoIdentity] = useState<string | null>(
+    null,
+  );
+  const failed = failedPhotoIdentity === photoIdentity;
   return (
     <div class="candidate-photo">
       {!candidate.photoPath || failed ? (
@@ -45,7 +49,7 @@ export function CandidatePhoto({ candidate }: { candidate: Candidate }) {
           src={publicPath(candidate.photoPath)}
           alt={`Foto de ${candidate.ballotName}`}
           loading="lazy"
-          onError={() => setFailed(true)}
+          onError={() => setFailedPhotoIdentity(photoIdentity)}
         />
       )}
     </div>

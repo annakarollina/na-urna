@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { CandidateSnapshotMetadata } from "../candidates/metadata.ts";
 import { CANDIDATE_STATUS, type Candidate } from "../candidates/model.ts";
 import { ELECTION_2026 } from "../election/elections.ts";
 import {
@@ -53,21 +54,37 @@ describe("composição do modelo da colinha", () => {
       scope: TERRITORIAL_SCOPE.STATE,
       uf: "SP",
     });
-    const model = composeColinhaModel(
-      session,
-      candidates,
-      {
-        notice: "DADOS FICTÍCIOS",
-        snapshotImportedAt: "2026-08-20T15:00:00.000Z",
-      },
-    );
+    const metadata = {
+      schemaVersion: 1,
+      year: 2026,
+      provider: "TSE",
+      dataset: "Candidatos 2026",
+      sourceUrl: "https://dadosabertos.tse.jus.br/",
+      sourceGeneratedAt: "2026-08-19T22:31:08.000Z",
+      importedAt: "2026-08-20T15:00:00.000Z",
+      pipelineVersion: "test",
+    } satisfies CandidateSnapshotMetadata;
+    const model = composeColinhaModel(session, candidates, {
+      notice: "DADOS FICTÍCIOS",
+      snapshotSourceGeneratedAt: metadata.sourceGeneratedAt,
+    });
+    const modelAfterAnotherImport = composeColinhaModel(session, candidates, {
+      notice: "DADOS FICTÍCIOS",
+      snapshotSourceGeneratedAt: {
+        ...metadata,
+        importedAt: "2026-08-24T12:00:00.000Z",
+      }.sourceGeneratedAt,
+    });
 
     expect(model.electionLocationLabel).toBe(
       "Eleições Gerais 2026 · São Paulo (SP)",
     );
     expect(model.notice).toBe("DADOS FICTÍCIOS");
     expect(model.dataUpdatedLabel).toBe(
-      "Dados do TSE atualizados em 20/08/2026",
+      "Dados do TSE gerados em 19/08/2026",
+    );
+    expect(modelAfterAnotherImport.dataUpdatedLabel).toBe(
+      model.dataUpdatedLabel,
     );
     expect(model.rows.map(({ officeLabel }) => officeLabel)).toEqual([
       "Deputado Federal",
@@ -333,8 +350,8 @@ describe("composição do modelo da colinha", () => {
 
     expect(() =>
       composeColinhaModel(session, candidates, {
-        snapshotImportedAt: "data-inválida",
+        snapshotSourceGeneratedAt: "data-inválida",
       }),
-    ).toThrow("data de atualização");
+    ).toThrow("data de geração da fonte");
   });
 });

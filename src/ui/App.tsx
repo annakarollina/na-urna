@@ -113,7 +113,7 @@ function ConfiguredApplication({
           state.datasetKind === CANDIDATE_DATASET_KIND.DEVELOPMENT_FIXTURE
             ? "DADOS FICTÍCIOS — DESENVOLVIMENTO — NÃO USE PARA VOTAR"
             : null,
-        snapshotImportedAt: state.metadata?.importedAt ?? null,
+        snapshotSourceGeneratedAt: state.metadata?.sourceGeneratedAt ?? null,
         omitEmptyRows: state.exportOnlyFilled,
       });
       const blob = await generateColinhaPng(model);
