@@ -51,11 +51,13 @@ describe("compartilhamento local da colinha", () => {
     expect(share).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "Minha Colinha",
+        text: "Essa é a minha colinha. Faça a sua: https://predocampos.github.io/minha-colinha/",
         files: [
           expect.objectContaining({ name: "minha-colinha-2026-SP.png" }),
         ],
       }),
     );
+    expect(share).toHaveBeenCalledTimes(1);
     await expect(operation).resolves.toEqual({ status: "shared" });
   });
 

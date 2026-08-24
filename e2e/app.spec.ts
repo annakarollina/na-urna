@@ -225,7 +225,7 @@ test("UF, escolha, troca e disponibilidade da exportação funcionam", async ({
 
   await expect(slot.getByText("EXEMPLO FEDERAL B", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Baixar minha colinha" }),
+    page.getByRole("button", { name: "Baixar", exact: true }),
   ).toBeEnabled();
 });
 
@@ -364,7 +364,7 @@ test("compartilha em um toque e reutiliza o PNG preparado", async ({ page }) => 
     )
     .toBe(1);
 
-  const download = page.getByRole("button", { name: "Baixar minha colinha" });
+  const download = page.getByRole("button", { name: "Baixar", exact: true });
   await Promise.all([page.waitForEvent("download"), download.click()]);
   expect(
     await page.evaluate(

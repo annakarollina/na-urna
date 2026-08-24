@@ -43,6 +43,9 @@ export function browserMayShareFiles(): boolean {
   );
 }
 
+const SHARE_TEXT =
+  "Essa é a minha colinha. Faça a sua: https://predocampos.github.io/minha-colinha/";
+
 function shareData(
   blob: Blob,
   fileName: string,
@@ -50,7 +53,7 @@ function shareData(
 ): ShareData {
   return {
     title: "Minha Colinha",
-    text: "Minha colinha eleitoral",
+    text: SHARE_TEXT,
     files: [environment.createFile(blob, fileName)],
   };
 }

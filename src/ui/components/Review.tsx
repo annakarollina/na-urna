@@ -13,6 +13,14 @@ import {
 } from "./CandidatePresentation.tsx";
 import { DownloadIcon, ShareIcon } from "./Icon.tsx";
 
+function PreparingImageStatus({ visible }: { visible: boolean }) {
+  return (
+    <p class="preparing-image-status" role="status" aria-live="polite">
+      {visible ? "Preparando imagem..." : ""}
+    </p>
+  );
+}
+
 function ExportRowPreference({
   state,
   onChange,
@@ -105,7 +113,7 @@ function ExportActions({
         <DownloadIcon />
         {generating && state.exportAction === "download"
           ? "Gerando sua colinha…"
-          : "Baixar minha colinha"}
+          : "Baixar"}
       </button>
       {shareApiAvailable && !shareUnavailable ? (
         <button
@@ -123,11 +131,6 @@ function ExportActions({
           <ShareIcon />
           Compartilhar
         </button>
-      ) : hasResolvedSelection ? (
-        <p class="export-hint">
-          Para compartilhar, baixe a imagem e use o compartilhamento de arquivos
-          do seu dispositivo.
-        </p>
       ) : null}
       {!hasResolvedSelection ? (
         <p class="export-hint">
@@ -143,10 +146,6 @@ function ExportActions({
           {state.exportAction === "share"
             ? "Abrindo o compartilhamento do dispositivo…"
             : "Fotos e textos estão sendo compostos neste dispositivo…"}
-        </p>
-      ) : preparing && hasResolvedSelection && metadataReady ? (
-        <p class="export-generating" role="status">
-          Preparando a imagem local para compartilhar…
         </p>
       ) : null}
       {(state.exportStatus === "error" ||
@@ -260,6 +259,12 @@ export function Review({
         onDownload={onDownload}
         onShare={onShare}
         onFallbackDownload={onFallbackDownload}
+      />
+      <PreparingImageStatus
+        visible={
+          state.exportPreparationStatus === "scheduled" ||
+          state.exportPreparationStatus === "generating"
+        }
       />
     </section>
   );
