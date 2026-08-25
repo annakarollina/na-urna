@@ -41,6 +41,7 @@ const JUDGMENT_MAPPINGS: Readonly<Record<string, JudgmentMapping>> = {
     description: "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO",
     status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
   },
+  "5": { description: "CANCELADO", status: CANDIDATE_STATUS.NOT_DISPLAYABLE },
   "6": { description: "RENÚNCIA", status: CANDIDATE_STATUS.NOT_DISPLAYABLE },
   "8": {
     description: "AGUARDANDO JULGAMENTO",

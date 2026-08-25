@@ -76,11 +76,12 @@ Na extração 2026 inspecionada, o arquivo principal apresentava `-3 / #NE` para
 | 16 | DEFERIDO EM PRAZO RECURSAL OU COM RECURSO | `DISPLAYABLE` |
 | 8 | AGUARDANDO JULGAMENTO | `PENDING_OR_AMBIGUOUS` |
 | 4 | INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO | `PENDING_OR_AMBIGUOUS` |
+| 5 | CANCELADO | `NOT_DISPLAYABLE` |
 | 6 | RENÚNCIA | `NOT_DISPLAYABLE` |
 | 13 | PEDIDO NÃO CONHECIDO | `NOT_DISPLAYABLE` |
 | 14 | INDEFERIDO | `NOT_DISPLAYABLE` |
 
-Decisão de produto: deferimento com recurso permanece exibível; indeferimento com recurso é mantido como ambíguo; renúncia, indeferimento sem indicação de recurso e pedido não conhecido não são exibíveis. Os registros continuam no snapshot com seu status — o adaptador não apaga a informação. Código novo, inclusive um valor conhecido apenas por eleições anteriores, ou descrição divergente interrompe a atualização para revisão humana.
+Decisão de produto: deferimento com recurso permanece exibível; indeferimento com recurso é mantido como ambíguo; cancelamento, renúncia, indeferimento sem indicação de recurso e pedido não conhecido não são exibíveis. `5 / CANCELADO` apareceu em uma atualização posterior do conjunto 2026 e foi incorporado somente após o fail-closed do pipeline exigir revisão. Os registros continuam no snapshot com seu status — o adaptador não apaga a informação. Código novo, inclusive um valor conhecido apenas por eleições anteriores, ou descrição divergente interrompe a atualização para revisão humana.
 
 A decisão e suas consequências estão registradas no [ADR-008](adr/008-ciclo-de-vida-candidatura.md).
 

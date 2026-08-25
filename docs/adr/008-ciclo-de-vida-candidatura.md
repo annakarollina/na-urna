@@ -12,9 +12,9 @@ Uma classificação baseada apenas nos textos observados em um único snapshot d
 
 ## Decisão
 
-O adaptador mantém tabelas explícitas de código e descrição para os dois campos. Elas reconhecem somente valores concretamente encontrados no pacote oficial de Candidatos 2026: `-3 / #NE` no campo geral e `2`, `4`, `6`, `8`, `13`, `14` e `16` no julgamento.
+O adaptador mantém tabelas explícitas de código e descrição para os dois campos. Elas reconhecem somente valores concretamente encontrados no pacote oficial de Candidatos 2026: `-3 / #NE` no campo geral e `2`, `4`, `5`, `6`, `8`, `13`, `14` e `16` no julgamento.
 
-`#NE` não é convertido em status do produto. O julgamento complementar fornece o estado de 2026. Códigos conhecidos apenas por eleições anteriores não são antecipados neste adaptador.
+`#NE` não é convertido em status do produto. O julgamento complementar fornece o estado de 2026. Deferimentos são exibíveis; situações recursais ou ainda não julgadas permanecem ambíguas; cancelamento, renúncia, pedido não conhecido e indeferimento inequívocos não são exibíveis. Códigos conhecidos apenas por eleições anteriores não são antecipados neste adaptador.
 
 Qualquer código novo ou divergência entre código e descrição aborta a normalização. A publicação continua atômica e exige revisão humana do mapeamento antes de aceitar um novo estado.
 
@@ -28,6 +28,6 @@ Qualquer código novo ou divergência entre código e descrição aborta a norma
 ## Consequências
 
 - mudanças do domínio oficial não chegam silenciosamente à interface;
-- transições 2026 de deferimento, recurso, espera de julgamento, renúncia, pedido não conhecido e indeferimento possuem testes explícitos;
+- transições 2026 de deferimento, recurso, espera de julgamento, cancelamento, renúncia, pedido não conhecido e indeferimento possuem testes explícitos;
 - registros não exibíveis permanecem auditáveis no snapshot, mas a camada de candidatos impede sua seleção;
 - novos códigos exigem inspeção oficial e alteração revisada do adaptador.

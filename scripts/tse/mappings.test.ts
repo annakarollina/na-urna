@@ -30,6 +30,9 @@ describe("mapeamentos explícitos do TSE 2026", () => {
     expect(
       mapTseJudgmentStatus("4", "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO"),
     ).toBe(CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS);
+    expect(mapTseJudgmentStatus("5", "CANCELADO")).toBe(
+      CANDIDATE_STATUS.NOT_DISPLAYABLE,
+    );
     expect(mapTseJudgmentStatus("6", "RENÚNCIA")).toBe(
       CANDIDATE_STATUS.NOT_DISPLAYABLE,
     );
@@ -41,6 +44,9 @@ describe("mapeamentos explícitos do TSE 2026", () => {
     );
     expect(() => mapTseJudgmentStatus("999", "NOVA SITUAÇÃO")).toThrow(
       /Situação de julgamento TSE desconhecida/,
+    );
+    expect(() => mapTseJudgmentStatus("5", "DESCRIÇÃO DIFERENTE")).toThrow(
+      /Situação de julgamento TSE desconhecida ou divergente/,
     );
   });
 
@@ -67,6 +73,9 @@ describe("mapeamentos explícitos do TSE 2026", () => {
       ),
     ).toBe(CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS);
     expect(resolveTseCandidateStatus("-3", "#NE", "6", "RENÚNCIA")).toBe(
+      CANDIDATE_STATUS.NOT_DISPLAYABLE,
+    );
+    expect(resolveTseCandidateStatus("-3", "#NE", "5", "CANCELADO")).toBe(
       CANDIDATE_STATUS.NOT_DISPLAYABLE,
     );
   });
