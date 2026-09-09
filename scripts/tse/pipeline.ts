@@ -16,6 +16,7 @@ import type {
   AcquiredResource,
   PhotoIndex,
   SnapshotMetadata,
+  UnknownJudgmentMapping,
 } from "./types.ts";
 
 export interface PipelineOptions {
@@ -26,6 +27,7 @@ export interface PipelineOptions {
   readonly pipelineVersion?: string;
   readonly publish?: boolean;
   readonly onProgress?: (message: string) => void;
+  readonly onWarning?: (message: string) => void;
 }
 
 export interface PipelineReport {
@@ -37,6 +39,7 @@ export interface PipelineReport {
   readonly candidateGeneratedAt: string;
   readonly supplementGeneratedAt: string;
   readonly supplementOnlyCount: number;
+  readonly unknownJudgmentMappings: readonly UnknownJudgmentMapping[];
 }
 
 function oneResource(
@@ -122,6 +125,7 @@ export async function runTse2026Pipeline(
   options: PipelineOptions,
 ): Promise<PipelineReport> {
   const progress = options.onProgress ?? (() => undefined);
+  const warning = options.onWarning ?? ((message: string) => console.warn(message));
   const dataRoot = path.resolve(options.dataRoot ?? path.join(options.projectRoot, "public", "data"));
   await mkdir(dataRoot, { recursive: true });
   const workDirectory = await mkdtemp(path.join(os.tmpdir(), "minha-colinha-tse-"));
@@ -152,6 +156,11 @@ export async function runTse2026Pipeline(
 
     progress("Normalizando e validando integralmente o contrato interno...");
     const normalized = normalizeTseCandidates(candidateRows, supplementRows, photos);
+    for (const mapping of normalized.unknownJudgmentMappings) {
+      warning(
+        `Situação de julgamento não reconhecida: ${mapping.externalCode} / ${mapping.externalDescription} — ${mapping.occurrences} ocorrência${mapping.occurrences === 1 ? "" : "s"}.`,
+      );
+    }
     progress(
       `Relação por SQ_CANDIDATO: principal ${candidateRows.length}, complementar ${supplementRows.length}, somente no complementar ${normalized.supplementOnlyCount}.`,
     );
@@ -183,6 +192,7 @@ export async function runTse2026Pipeline(
       candidateGeneratedAt: normalized.candidateGeneratedAt,
       supplementGeneratedAt: normalized.supplementGeneratedAt,
       supplementOnlyCount: normalized.supplementOnlyCount,
+      unknownJudgmentMappings: normalized.unknownJudgmentMappings,
     };
   } finally {
     if (stage) await rm(stage, { recursive: true, force: true });

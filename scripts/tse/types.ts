@@ -47,6 +47,12 @@ export interface PhotoSource {
 
 export type PhotoIndex = ReadonlyMap<string, ReadonlyMap<string, PhotoSource>>;
 
+export interface UnknownJudgmentMapping {
+  readonly externalCode: string;
+  readonly externalDescription: string;
+  readonly occurrences: number;
+}
+
 export interface NormalizationResult {
   readonly candidates: readonly Candidate[];
   readonly sourceGeneratedAt: string;
@@ -57,6 +63,7 @@ export interface NormalizationResult {
   readonly ignoredOfficeCounts: Readonly<Record<string, number>>;
   readonly sourceStatusCounts: Readonly<Record<string, number>>;
   readonly internalStatusCounts: Readonly<Record<string, number>>;
+  readonly unknownJudgmentMappings: readonly UnknownJudgmentMapping[];
   readonly missingPhotoCount: number;
 }
 

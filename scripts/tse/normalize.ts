@@ -152,6 +152,10 @@ export function normalizeTseCandidates(
   const ignoredOfficeCounts: Record<string, number> = {};
   const sourceStatusCounts: Record<string, number> = {};
   const internalStatusCounts: Record<string, number> = {};
+  const unknownJudgmentCounts = new Map<
+    string,
+    { externalCode: string; externalDescription: string; occurrences: number }
+  >();
   let missingPhotoCount = 0;
 
   for (const row of candidateRows) {
@@ -173,12 +177,28 @@ export function normalizeTseCandidates(
       throw new Error(`Ano divergente no registro complementar ${row.sequenceId}.`);
     }
 
-    const status = resolveTseCandidateStatus(
+    const statusResolution = resolveTseCandidateStatus(
       row.candidacyStatusCode,
       row.candidacyStatusDescription,
       supplement.judgmentStatusCode,
       supplement.judgmentStatusDescription,
     );
+    if (!statusResolution.recognized) {
+      const key = JSON.stringify([
+        statusResolution.externalCode,
+        statusResolution.externalDescription,
+      ]);
+      const current = unknownJudgmentCounts.get(key);
+      if (current) current.occurrences += 1;
+      else {
+        unknownJudgmentCounts.set(key, {
+          externalCode: statusResolution.externalCode,
+          externalDescription: statusResolution.externalDescription,
+          occurrences: 1,
+        });
+      }
+    }
+    const status = statusResolution.status;
     const office = mapTseOffice(row.officeCode, row.officeDescription);
     if (!office) {
       increment(ignoredOfficeCounts, `${row.officeCode} ${row.officeDescription}`);
@@ -223,6 +243,20 @@ export function normalizeTseCandidates(
     (sequenceId) => !seen.has(sequenceId),
   ).length;
 
+  const unknownJudgmentMappings = [...unknownJudgmentCounts.values()].sort(
+    (left, right) =>
+      (left.externalCode < right.externalCode
+        ? -1
+        : left.externalCode > right.externalCode
+          ? 1
+          : 0) ||
+      (left.externalDescription < right.externalDescription
+        ? -1
+        : left.externalDescription > right.externalDescription
+          ? 1
+          : 0),
+  );
+
   candidates.sort((left, right) => {
     const partitionLeft = left.jurisdiction.scope === "NATIONAL" ? "BR" : left.jurisdiction.uf;
     const partitionRight = right.jurisdiction.scope === "NATIONAL" ? "BR" : right.jurisdiction.uf;
@@ -245,6 +279,7 @@ export function normalizeTseCandidates(
     ignoredOfficeCounts,
     sourceStatusCounts,
     internalStatusCounts,
+    unknownJudgmentMappings,
     missingPhotoCount,
   };
 }

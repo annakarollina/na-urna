@@ -76,12 +76,17 @@ Na extração 2026 inspecionada, o arquivo principal apresentava `-3 / #NE` para
 | 16 | DEFERIDO EM PRAZO RECURSAL OU COM RECURSO | `DISPLAYABLE` |
 | 8 | AGUARDANDO JULGAMENTO | `PENDING_OR_AMBIGUOUS` |
 | 4 | INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO | `PENDING_OR_AMBIGUOUS` |
+| 17 | PENDENTE DE JULGAMENTO | `PENDING_OR_AMBIGUOUS` |
 | 5 | CANCELADO | `NOT_DISPLAYABLE` |
 | 6 | RENÚNCIA | `NOT_DISPLAYABLE` |
 | 13 | PEDIDO NÃO CONHECIDO | `NOT_DISPLAYABLE` |
 | 14 | INDEFERIDO | `NOT_DISPLAYABLE` |
 
-Decisão de produto: deferimento com recurso permanece exibível; indeferimento com recurso é mantido como ambíguo; cancelamento, renúncia, indeferimento sem indicação de recurso e pedido não conhecido não são exibíveis. `5 / CANCELADO` apareceu em uma atualização posterior do conjunto 2026 e foi incorporado somente após o fail-closed do pipeline exigir revisão. Os registros continuam no snapshot com seu status — o adaptador não apaga a informação. Código novo, inclusive um valor conhecido apenas por eleições anteriores, ou descrição divergente interrompe a atualização para revisão humana.
+Decisão de produto: deferimento com recurso permanece exibível; indeferimento com recurso, `8 / AGUARDANDO JULGAMENTO` e `17 / PENDENTE DE JULGAMENTO` são estados externos distintos que convergem para a classificação interna ambígua; cancelamento, renúncia, indeferimento sem indicação de recurso e pedido não conhecido não são exibíveis. `5 / CANCELADO` apareceu em uma atualização posterior do conjunto 2026 e foi incorporado somente após o fail-closed então vigente exigir revisão. Os registros continuam no snapshot com seu status — o adaptador não apaga a informação.
+
+O reconhecimento continua a considerar o par completo código e descrição. Um par ainda não mapeado, inclusive uma descrição divergente para um código conhecido, preserva seus valores externos, recebe conservadoramente `PENDING_OR_AMBIGUOUS` e é agregado em um diagnóstico por código e descrição. O pipeline emite warnings determinísticos — como annotations no GitHub Actions e em stderr nos demais ambientes — sem invalidar o snapshot somente por essa evolução semântica. Os pares diagnosticados devem ser revisados posteriormente e incorporados explicitamente quando sua semântica estiver estabelecida.
+
+Essa tolerância é restrita à enumeração de julgamento. CSV ou ZIP inválido, coluna obrigatória ausente, falha de parsing, identificador inválido, duplicidade, associação estrutural impossível, partição ausente, snapshot incompleto e inconsistência de artefato continuam abortando globalmente a publicação.
 
 A decisão e suas consequências estão registradas no [ADR-008](adr/008-ciclo-de-vida-candidatura.md).
 

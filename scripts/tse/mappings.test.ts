@@ -19,35 +19,60 @@ describe("mapeamentos explícitos do TSE 2026", () => {
     expect(() => mapTseOffice("99", "CARGO NOVO")).toThrow(/Cargo TSE desconhecido/);
   });
 
-  it("mapeia todas as situações observadas sem fallback silencioso", () => {
-    expect(mapTseJudgmentStatus("2", "DEFERIDO")).toBe(CANDIDATE_STATUS.DISPLAYABLE);
+  it("mapeia explicitamente as situações conhecidas e preserva seu reconhecimento", () => {
+    expect(mapTseJudgmentStatus("2", "DEFERIDO")).toEqual({
+      status: CANDIDATE_STATUS.DISPLAYABLE,
+      recognized: true,
+      externalCode: "2",
+      externalDescription: "DEFERIDO",
+    });
     expect(
       mapTseJudgmentStatus("16", "DEFERIDO EM PRAZO RECURSAL OU COM RECURSO"),
-    ).toBe(CANDIDATE_STATUS.DISPLAYABLE);
-    expect(mapTseJudgmentStatus("8", "AGUARDANDO JULGAMENTO")).toBe(
-      CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
-    );
+    ).toMatchObject({ status: CANDIDATE_STATUS.DISPLAYABLE, recognized: true });
+    expect(mapTseJudgmentStatus("8", "AGUARDANDO JULGAMENTO")).toMatchObject({
+      status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+      recognized: true,
+    });
     expect(
       mapTseJudgmentStatus("4", "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO"),
-    ).toBe(CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS);
-    expect(mapTseJudgmentStatus("5", "CANCELADO")).toBe(
-      CANDIDATE_STATUS.NOT_DISPLAYABLE,
-    );
-    expect(mapTseJudgmentStatus("6", "RENÚNCIA")).toBe(
-      CANDIDATE_STATUS.NOT_DISPLAYABLE,
-    );
-    expect(mapTseJudgmentStatus("13", "PEDIDO NÃO CONHECIDO")).toBe(
-      CANDIDATE_STATUS.NOT_DISPLAYABLE,
-    );
-    expect(mapTseJudgmentStatus("14", "INDEFERIDO")).toBe(
-      CANDIDATE_STATUS.NOT_DISPLAYABLE,
-    );
-    expect(() => mapTseJudgmentStatus("999", "NOVA SITUAÇÃO")).toThrow(
-      /Situação de julgamento TSE desconhecida/,
-    );
-    expect(() => mapTseJudgmentStatus("5", "DESCRIÇÃO DIFERENTE")).toThrow(
-      /Situação de julgamento TSE desconhecida ou divergente/,
-    );
+    ).toMatchObject({ status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS, recognized: true });
+    expect(mapTseJudgmentStatus("17", "PENDENTE DE JULGAMENTO")).toEqual({
+      status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+      recognized: true,
+      externalCode: "17",
+      externalDescription: "PENDENTE DE JULGAMENTO",
+    });
+    expect(mapTseJudgmentStatus("5", "CANCELADO")).toMatchObject({
+      status: CANDIDATE_STATUS.NOT_DISPLAYABLE,
+      recognized: true,
+    });
+    expect(mapTseJudgmentStatus("6", "RENÚNCIA")).toMatchObject({
+      status: CANDIDATE_STATUS.NOT_DISPLAYABLE,
+      recognized: true,
+    });
+    expect(mapTseJudgmentStatus("13", "PEDIDO NÃO CONHECIDO")).toMatchObject({
+      status: CANDIDATE_STATUS.NOT_DISPLAYABLE,
+      recognized: true,
+    });
+    expect(mapTseJudgmentStatus("14", "INDEFERIDO")).toMatchObject({
+      status: CANDIDATE_STATUS.NOT_DISPLAYABLE,
+      recognized: true,
+    });
+  });
+
+  it("classifica pares desconhecidos conservadoramente sem perder os dados externos", () => {
+    expect(mapTseJudgmentStatus("999", "SITUAÇÃO NOVA")).toEqual({
+      status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+      recognized: false,
+      externalCode: "999",
+      externalDescription: "SITUAÇÃO NOVA",
+    });
+    expect(mapTseJudgmentStatus("17", "DESCRIÇÃO QUE NÃO CORRESPONDE AO MAPPING")).toEqual({
+      status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+      recognized: false,
+      externalCode: "17",
+      externalDescription: "DESCRIÇÃO QUE NÃO CORRESPONDE AO MAPPING",
+    });
   });
 
   it("não trata o único valor geral observado em 2026 como situação eleitoral", () => {
@@ -61,9 +86,10 @@ describe("mapeamentos explícitos do TSE 2026", () => {
   });
 
   it("resolve o ciclo 2026 a partir do julgamento complementar", () => {
-    expect(resolveTseCandidateStatus("-3", "#NE", "2", "DEFERIDO")).toBe(
-      CANDIDATE_STATUS.DISPLAYABLE,
-    );
+    expect(resolveTseCandidateStatus("-3", "#NE", "2", "DEFERIDO")).toMatchObject({
+      status: CANDIDATE_STATUS.DISPLAYABLE,
+      recognized: true,
+    });
     expect(
       resolveTseCandidateStatus(
         "-3",
@@ -71,12 +97,21 @@ describe("mapeamentos explícitos do TSE 2026", () => {
         "4",
         "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO",
       ),
-    ).toBe(CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS);
-    expect(resolveTseCandidateStatus("-3", "#NE", "6", "RENÚNCIA")).toBe(
-      CANDIDATE_STATUS.NOT_DISPLAYABLE,
-    );
-    expect(resolveTseCandidateStatus("-3", "#NE", "5", "CANCELADO")).toBe(
-      CANDIDATE_STATUS.NOT_DISPLAYABLE,
-    );
+    ).toMatchObject({ status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS, recognized: true });
+    expect(
+      resolveTseCandidateStatus("-3", "#NE", "17", "PENDENTE DE JULGAMENTO"),
+    ).toMatchObject({ status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS, recognized: true });
+    expect(resolveTseCandidateStatus("-3", "#NE", "6", "RENÚNCIA")).toMatchObject({
+      status: CANDIDATE_STATUS.NOT_DISPLAYABLE,
+      recognized: true,
+    });
+    expect(resolveTseCandidateStatus("-3", "#NE", "5", "CANCELADO")).toMatchObject({
+      status: CANDIDATE_STATUS.NOT_DISPLAYABLE,
+      recognized: true,
+    });
+    expect(resolveTseCandidateStatus("-3", "#NE", "999", "SITUAÇÃO NOVA")).toMatchObject({
+      status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+      recognized: false,
+    });
   });
 });

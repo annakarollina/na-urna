@@ -129,7 +129,7 @@ describe("normalização TSE → modelo interno", () => {
     expect(result.ignoredOfficeCounts).toEqual({ "9 1º SUPLENTE": 1 });
   });
 
-  it("rejeita dados incompletos, situação desconhecida e cargo territorial inválido", () => {
+  it("rejeita dados incompletos, situação geral desconhecida e cargo territorial inválido", () => {
     expect(() =>
       normalizeTseCandidates(
         [candidate({ sequenceId: "1" })],
@@ -137,13 +137,6 @@ describe("normalização TSE → modelo interno", () => {
         new Map(),
       ),
     ).toThrow(/Não há registro complementar para SQ_CANDIDATO 1/);
-    expect(() =>
-      normalizeTseCandidates(
-        [candidate({ sequenceId: "1" })],
-        [supplement("1", "999", "NOVA")],
-        new Map(),
-      ),
-    ).toThrow(/Situação de julgamento TSE desconhecida/);
     expect(() =>
       normalizeTseCandidates(
         [
@@ -172,6 +165,52 @@ describe("normalização TSE → modelo interno", () => {
         new Map(),
       ),
     ).toThrow(/Situação geral de candidatura TSE desconhecida/);
+  });
+
+  it("agrupa julgamentos desconhecidos e os mantém pendentes em ordem determinística", () => {
+    const result = normalizeTseCandidates(
+      [
+        candidate({ sequenceId: "1" }),
+        candidate({ sequenceId: "2" }),
+        candidate({ sequenceId: "3" }),
+        candidate({ sequenceId: "4" }),
+      ],
+      [
+        supplement("1", "18", "NOVO"),
+        supplement("2", "19", "OUTRO"),
+        supplement("3", "18", "NOVO"),
+        supplement("4", "18", "NOVO"),
+      ],
+      new Map(),
+    );
+
+    expect(result.candidates.map(({ status }) => status)).toEqual([
+      CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+      CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+      CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+      CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+    ]);
+    expect(result.unknownJudgmentMappings).toEqual([
+      { externalCode: "18", externalDescription: "NOVO", occurrences: 3 },
+      { externalCode: "19", externalDescription: "OUTRO", occurrences: 1 },
+    ]);
+  });
+
+  it("não confunde uma descrição divergente com o mapping conhecido do código 17", () => {
+    const result = normalizeTseCandidates(
+      [candidate({ sequenceId: "1" })],
+      [supplement("1", "17", "DESCRIÇÃO DIVERGENTE")],
+      new Map(),
+    );
+
+    expect(result.candidates[0]?.status).toBe(CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS);
+    expect(result.unknownJudgmentMappings).toEqual([
+      {
+        externalCode: "17",
+        externalDescription: "DESCRIÇÃO DIVERGENTE",
+        occurrences: 1,
+      },
+    ]);
   });
 
   it("preserva as transições de julgamento observadas em 2026", () => {

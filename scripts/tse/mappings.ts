@@ -24,6 +24,13 @@ interface JudgmentMapping {
   readonly status: CandidateStatus;
 }
 
+export interface JudgmentResolution {
+  readonly status: CandidateStatus;
+  readonly recognized: boolean;
+  readonly externalCode: string;
+  readonly externalDescription: string;
+}
+
 interface CandidacyMapping {
   readonly description: string;
   readonly status: CandidateStatus | null;
@@ -56,6 +63,10 @@ const JUDGMENT_MAPPINGS: Readonly<Record<string, JudgmentMapping>> = {
     description: "DEFERIDO EM PRAZO RECURSAL OU COM RECURSO",
     status: CANDIDATE_STATUS.DISPLAYABLE,
   },
+  "17": {
+    description: "PENDENTE DE JULGAMENTO",
+    status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+  },
 };
 
 export function mapTseOffice(
@@ -72,12 +83,22 @@ export function mapTseOffice(
 export function mapTseJudgmentStatus(
   code: string,
   description: string,
-): CandidateStatus {
+): JudgmentResolution {
   const mapping = JUDGMENT_MAPPINGS[code];
   if (!mapping || mapping.description !== description) {
-    throw new Error(`Situação de julgamento TSE desconhecida ou divergente: ${code} / ${description}.`);
+    return {
+      status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS,
+      recognized: false,
+      externalCode: code,
+      externalDescription: description,
+    };
   }
-  return mapping.status;
+  return {
+    status: mapping.status,
+    recognized: true,
+    externalCode: code,
+    externalDescription: description,
+  };
 }
 
 export function mapTseCandidacyStatus(
@@ -98,7 +119,7 @@ export function resolveTseCandidateStatus(
   candidacyDescription: string,
   judgmentCode: string,
   judgmentDescription: string,
-): CandidateStatus {
+): JudgmentResolution {
   const candidacy = mapTseCandidacyStatus(
     candidacyCode,
     candidacyDescription,
@@ -109,15 +130,15 @@ export function resolveTseCandidateStatus(
   // adquira futuramente um valor explicitamente revisado para 2026.
   if (
     candidacy === CANDIDATE_STATUS.NOT_DISPLAYABLE ||
-    judgment === CANDIDATE_STATUS.NOT_DISPLAYABLE
+    judgment.status === CANDIDATE_STATUS.NOT_DISPLAYABLE
   ) {
-    return CANDIDATE_STATUS.NOT_DISPLAYABLE;
+    return { ...judgment, status: CANDIDATE_STATUS.NOT_DISPLAYABLE };
   }
   if (
     candidacy === CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS ||
-    judgment === CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS
+    judgment.status === CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS
   ) {
-    return CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS;
+    return { ...judgment, status: CANDIDATE_STATUS.PENDING_OR_AMBIGUOUS };
   }
-  return CANDIDATE_STATUS.DISPLAYABLE;
+  return { ...judgment, status: CANDIDATE_STATUS.DISPLAYABLE };
 }

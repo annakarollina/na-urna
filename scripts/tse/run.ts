@@ -58,6 +58,10 @@ function errorChain(error: unknown): string {
   return messages.join("\nCausado por: ");
 }
 
+function githubCommandValue(value: string): string {
+  return value.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A");
+}
+
 try {
   const arguments_ = parseArguments(process.argv.slice(2));
   const projectRoot = process.cwd();
@@ -71,6 +75,13 @@ try {
       : {}),
     publish: arguments_.publish,
     onProgress: (message) => console.log(`[TSE 2026] ${message}`),
+    onWarning: (message) => {
+      if (process.env.GITHUB_ACTIONS === "true") {
+        console.warn(`::warning title=Contrato TSE evoluiu::${githubCommandValue(message)}`);
+      } else {
+        console.warn(`[TSE 2026] AVISO: ${message}`);
+      }
+    },
   });
   console.log(
     `[TSE 2026] ${report.published ? "Publicado" : "Validado"}: ${report.candidateCount} candidaturas, ${report.missingPhotoCount} sem foto, geração ${report.sourceGeneratedAt}.`,
