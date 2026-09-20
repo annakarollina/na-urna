@@ -251,6 +251,23 @@ informados à Justiça Eleitoral, sem verificação de autenticidade pelo projet
 Deduplicar por (`SQ_CANDIDATO`, URL normalizada) antes de exibir, mantendo a
 menor `NR_ORDEM_REDE_SOCIAL`.
 
+### 8.1 Telefone e e-mail nunca visíveis
+
+Decisão de 20/09/2026: telefone e e-mail de candidatura nunca aparecem como
+texto visível em nenhum artefato, mesmo quando declarados no campo de rede
+social.
+
+- Registro do degrau 3 que seja telefone (só dígitos e separadores, com 10 a 13
+  dígitos após remover a pontuação) ou e-mail (padrão `usuario@dominio.tld`,
+  após descartar prefixo `https://` espúrio) é removido na ingestão, com
+  contagem em log. Na extração de 13/09 são 22 telefones e 151 e-mails.
+- Link de WhatsApp com número embutido (`wa.me/<número>`,
+  `api.whatsapp.com/send?phone=<número>`) continua sendo link, mas o texto
+  visível é o rótulo "canal de WhatsApp declarado", nunca o número. Convite de
+  grupo (`chat.whatsapp.com/<código>`) não contém número e aparece normalmente.
+- Handle como `@fulana` não é e-mail: só é e-mail o que tem domínio com ponto
+  depois do arroba.
+
 ---
 
 ## 9. Validação obrigatória do build
@@ -288,6 +305,7 @@ e registrar as duas datas: geração no TSE e importação no projeto.
 
 E o que nenhum artefato pode carregar:
 
+- Telefone ou e-mail de candidatura como texto visível (seção 8.1).
 - Pedido de voto, explícito ou por formulação equivalente ("vote em", "escolha
   a sua candidata", "leve na urna"). O site informa. Texto gerado por IA passa
   por essa revisão antes de entrar.
