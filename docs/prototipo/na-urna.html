@@ -1,0 +1,746 @@
+<title>Na Urna</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#EDEFF1; --surface:#FFFFFF; --surface-2:#F6F8F9;
+  --ink:#191C1F; --muted:#59616A; --border:#D3D8DC; --border-strong:#AEB6BC;
+  --accent:#6D4A9E; --accent-ink:#FFFFFF; --accent-soft:#F0EAF8; --accent-border:#C9B6E4;
+  --confirma:#157A46; --confirma-ink:#FFFFFF;
+  --corrige:#C75A1E;
+  --digit-bg:#FBFCFA; --digit-ink:#14171A;
+  --shadow:0 1px 2px rgba(20,25,30,.06),0 4px 14px rgba(20,25,30,.07);
+  --chart-bar:#6D4A9E; --chart-track:#E8EBED;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121517; --surface:#1C2024; --surface-2:#22272C;
+    --ink:#E7EAEC; --muted:#9AA3AB; --border:#343B41; --border-strong:#4A535B;
+    --accent:#9673D1; --accent-ink:#14171A; --accent-soft:#2B2338; --accent-border:#54427A;
+    --confirma:#2E9E63; --confirma-ink:#0E1512;
+    --corrige:#DD7B3D;
+    --digit-bg:#14171A; --digit-ink:#E7EAEC;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.35);
+    --chart-bar:#9673D1; --chart-track:#2A3036;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121517; --surface:#1C2024; --surface-2:#22272C;
+  --ink:#E7EAEC; --muted:#9AA3AB; --border:#343B41; --border-strong:#4A535B;
+  --accent:#9673D1; --accent-ink:#14171A; --accent-soft:#2B2338; --accent-border:#54427A;
+  --confirma:#2E9E63; --confirma-ink:#0E1512;
+  --corrige:#DD7B3D;
+  --digit-bg:#14171A; --digit-ink:#E7EAEC;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.35);
+  --chart-bar:#9673D1; --chart-track:#2A3036;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'Archivo',system-ui,-apple-system,sans-serif;
+  font-size:16px; line-height:1.55;
+}
+.wrap{max-width:600px; margin:0 auto; padding-inline:16px; padding-block:0 48px;}
+h1,h2,h3{font-family:'Archivo Black','Archivo',system-ui,sans-serif; line-height:1.15; text-wrap:balance; margin:0}
+a{color:var(--accent)}
+button{font:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px; border-radius:4px}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums}
+
+/* faixa de protótipo */
+.proto-strip{
+  background:var(--corrige); color:#fff; text-align:center;
+  font-size:12.5px; font-weight:600; letter-spacing:.02em;
+  padding:6px 16px;
+}
+/* cabeçalho */
+header.top{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:30;
+  background:var(--surface); border-bottom:1px solid var(--border);
+}
+.top-in{max-width:600px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+.wordmark{font-family:'Archivo Black',sans-serif; font-size:20px; letter-spacing:.01em; display:flex; align-items:center; gap:8px}
+.wordmark .dot{width:10px;height:10px;border-radius:2px;background:var(--accent);display:inline-block}
+nav.tabs{display:flex; gap:4px; margin-left:auto}
+nav.tabs button{
+  border:none; background:none; color:var(--muted); font-weight:600; font-size:14px;
+  padding:8px 10px; border-radius:8px;
+}
+nav.tabs button[aria-current="true"]{background:var(--accent-soft); color:var(--accent)}
+nav.tabs button:hover{color:var(--ink)}
+
+/* hero */
+.hero{padding-block:34px 10px}
+.hero h1{font-size:clamp(34px,9vw,46px)}
+.hero .tagline{color:var(--muted); max-width:46ch; margin:12px 0 0; font-size:16.5px}
+.hero .ctas{display:flex; gap:10px; margin-top:20px; flex-wrap:wrap}
+.btn{
+  border:none; border-radius:10px; padding:12px 18px; font-weight:700; font-size:15.5px;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.btn-confirma{background:var(--confirma); color:var(--confirma-ink)}
+.btn-ghost{background:var(--surface); color:var(--ink); border:1.5px solid var(--border-strong)}
+.btn-accent{background:var(--accent); color:var(--accent-ink)}
+.btn:active{transform:translateY(1px)}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow:var(--shadow)}
+.section{margin-top:26px}
+.section>h2{font-size:19px; margin-bottom:4px}
+.section>.sub{color:var(--muted); font-size:14px; margin:0 0 12px}
+
+/* mapa de UFs */
+.map-card{padding:14px}
+.map-svg{width:100%; height:auto; display:block}
+.tile{fill:var(--surface-2); stroke:var(--border); rx:8; cursor:pointer; transition:fill .12s}
+.tile-g:hover .tile{fill:var(--accent-soft); stroke:var(--accent-border)}
+.tile-g text{font-family:'Archivo',sans-serif; font-size:14px; font-weight:700; fill:var(--muted); pointer-events:none}
+.tile-g.on .tile{fill:var(--accent); stroke:var(--accent)}
+.tile-g.on text{fill:var(--accent-ink)}
+.tile-g.dim .tile{opacity:.55}
+.tile-g.dim text{opacity:.55}
+.map-note{color:var(--muted); font-size:13px; margin:10px 2px 0}
+
+/* filtro só candidatas */
+.filter-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.switch{
+  display:inline-flex; align-items:center; gap:10px; border:1.5px solid var(--accent-border);
+  background:var(--accent-soft); color:var(--ink); border-radius:999px; padding:8px 14px; font-weight:600; font-size:14px;
+}
+.switch .knob{
+  width:34px; height:20px; border-radius:999px; background:var(--border-strong); position:relative; transition:background .15s; flex:none;
+}
+.switch .knob::after{
+  content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%;
+  background:var(--surface); transition:left .15s;
+}
+.switch[aria-pressed="true"] .knob{background:var(--accent)}
+.switch[aria-pressed="true"] .knob::after{left:16px}
+.filter-hint{font-size:12.5px; color:var(--muted); flex-basis:100%}
+
+/* números / tiles de estatística */
+.stat-row{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px}
+.stat{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 12px}
+.stat .n{font-family:'Archivo Black',sans-serif; font-size:clamp(20px,5.5vw,27px); letter-spacing:.01em}
+.stat .l{color:var(--muted); font-size:12.5px; margin-top:2px; line-height:1.35}
+@media (max-width:420px){ .stat-row{grid-template-columns:1fr 1fr} .stat:first-child{grid-column:1/-1} }
+
+/* gráfico de barras */
+.chart{margin-top:8px}
+.crow{display:grid; grid-template-columns:minmax(96px,128px) 1fr 52px; align-items:center; gap:10px; padding-block:5px}
+.crow .lbl{font-size:13px; color:var(--ink); line-height:1.25}
+.crow .val{font-size:13px; font-weight:600; text-align:right}
+.track{position:relative; height:14px; background:var(--chart-track); border-radius:4px}
+.bar{position:absolute; inset:0 auto 0 0; background:var(--chart-bar); border-radius:4px; min-width:3px}
+.refline{position:absolute; top:-4px; bottom:-4px; width:0; border-left:2px dashed var(--muted); opacity:.75}
+.chart-foot{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12.5px; margin-top:10px; flex-wrap:wrap}
+.chart-foot .ref-key{display:inline-block; width:14px; border-top:2px dashed var(--muted); transform:translateY(-3px)}
+.crow:hover .track{outline:2px solid var(--accent-border); outline-offset:1px}
+details.tbl{margin-top:10px; font-size:13.5px}
+details.tbl summary{cursor:pointer; color:var(--accent); font-weight:600}
+details.tbl table{border-collapse:collapse; margin-top:8px; width:100%}
+details.tbl th,details.tbl td{border-bottom:1px solid var(--border); text-align:left; padding:5px 8px 5px 0}
+details.tbl td.num,details.tbl th.num{text-align:right}
+
+/* stepper da colinha */
+.steps-bar{display:flex; gap:5px; margin:16px 0 4px}
+.steps-bar .seg{flex:1; height:5px; border-radius:3px; background:var(--border)}
+.steps-bar .seg.done{background:var(--confirma)}
+.steps-bar .seg.cur{background:var(--accent)}
+.step-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-top:14px}
+.step-head .k{font-size:12px; font-weight:700; letter-spacing:.09em; color:var(--muted); text-transform:uppercase}
+.step-head h2{font-size:21px}
+.uf-chip{margin-left:auto; font-weight:700; font-size:13px; background:var(--surface); border:1.5px solid var(--border-strong); border-radius:999px; padding:4px 12px}
+
+.search{
+  display:flex; align-items:center; gap:8px; background:var(--surface); border:1.5px solid var(--border-strong);
+  border-radius:12px; padding:10px 14px; margin-top:14px;
+}
+.search input{border:none; outline:none; background:none; color:var(--ink); font:inherit; width:100%}
+.search .ico{color:var(--muted); flex:none}
+.dup-note{
+  background:var(--accent-soft); border:1px solid var(--accent-border); color:var(--ink);
+  border-radius:10px; padding:10px 12px; font-size:13.5px; margin-top:10px;
+}
+
+.cand-list{display:flex; flex-direction:column; gap:10px; margin-top:14px}
+.cand{
+  display:grid; grid-template-columns:44px 1fr auto; gap:12px; align-items:center; text-align:left;
+  background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; color:var(--ink);
+  width:100%;
+}
+.cand:hover{border-color:var(--accent-border)}
+.cand.sel{border:2px solid var(--confirma)}
+.avatar{
+  width:44px; height:44px; border-radius:10px; background:var(--surface-2); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; color:var(--muted);
+}
+.cand .nm{font-weight:700; font-size:15.5px; line-height:1.25}
+.cand .meta{color:var(--muted); font-size:13px; margin-top:1px}
+.digits{display:flex; gap:3px}
+.digits span{
+  font-family:'IBM Plex Mono',ui-monospace,monospace; font-weight:600; font-variant-numeric:tabular-nums;
+  background:var(--digit-bg); color:var(--digit-ink); border:1.5px solid var(--border-strong); border-radius:6px;
+  min-width:22px; padding:3px 0; text-align:center; font-size:15px;
+}
+.empty-msg{color:var(--muted); font-size:14px; padding:18px 4px; text-align:center}
+.step-actions{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap}
+.link-btn{background:none;border:none;color:var(--accent);font-weight:600;padding:8px 4px}
+
+/* revisão */
+.rev-item{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; padding:12px 0; border-bottom:1px solid var(--border)}
+.rev-item:last-of-type{border-bottom:none}
+.rev-item .c{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.rev-item .n{font-weight:700; margin-top:2px}
+.rev-item .p{color:var(--muted); font-size:13px}
+.rev-item .none{color:var(--muted); font-style:italic; font-weight:400}
+.png-out{margin-top:16px}
+.png-out img{width:100%; border:1px solid var(--border); border-radius:12px; display:block}
+.png-hint{color:var(--muted); font-size:13px; margin-top:8px}
+
+/* ficha (dialog) */
+dialog.ficha{
+  border:none; border-radius:16px 16px 0 0; padding:0; width:100%; max-width:600px;
+  background:var(--surface); color:var(--ink);
+  margin:auto auto 0; box-shadow:0 -8px 40px rgba(0,0,0,.25);
+}
+@media (min-width:640px){ dialog.ficha{border-radius:16px; margin:auto} }
+dialog.ficha::backdrop{background:rgba(10,12,14,.5)}
+.ficha-in{padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px))}
+.ficha-top{display:flex; gap:14px; align-items:center}
+.ficha-top .avatar{width:56px; height:56px; font-size:18px}
+.ficha-top h3{font-size:20px}
+.ficha-top .meta{color:var(--muted); font-size:14px; margin-top:2px}
+.ficha-num{margin-top:16px}
+.ficha-num .digits span{min-width:30px; font-size:20px; padding:5px 0}
+.ficha-num .cap{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:6px}
+.redes{margin-top:18px}
+.redes h4{margin:0 0 8px; font-size:14px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.rede{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:14.5px}
+.rede:last-child{border-bottom:none}
+.rede .plat{flex:none; font-size:12px; font-weight:700; background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 8px; color:var(--muted)}
+.rede a{font-weight:600; word-break:break-all}
+.rede .plain{color:var(--muted)}
+.redes .avulso{color:var(--muted); font-size:12.5px; margin-top:10px}
+.ficha-actions{display:flex; gap:10px; margin-top:20px; flex-wrap:wrap}
+
+/* metodologia */
+.met h2{font-size:19px; margin-top:26px}
+.met p, .met li{font-size:15px}
+.met blockquote{
+  margin:14px 0; padding:14px 16px; border-left:4px solid var(--accent);
+  background:var(--surface); border-radius:0 10px 10px 0; font-size:15px;
+}
+.met ul{padding-left:20px}
+
+/* rodapé */
+footer.site{
+  margin-top:40px; border-top:1px solid var(--border); color:var(--muted); font-size:13px;
+  padding:18px 2px 8px; line-height:1.6;
+}
+footer.site strong{color:var(--ink)}
+
+/* toast */
+.toast{
+  position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(8px);
+  background:var(--ink); color:var(--bg); padding:10px 18px; border-radius:10px; font-size:14px; font-weight:600;
+  opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:60; max-width:90vw; text-align:center;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+@media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
+</style>
+
+<div class="proto-strip">PROTÓTIPO · candidaturas fictícias de demonstração · os números reais virão dos dados abertos do TSE</div>
+
+<header class="top">
+  <div class="top-in">
+    <span class="wordmark"><span class="dot"></span>NA URNA</span>
+    <nav class="tabs" aria-label="Seções">
+      <button data-nav="home" aria-current="true">Início</button>
+      <button data-nav="colinha">Colinha</button>
+      <button data-nav="met">Metodologia</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ INÍCIO ============ -->
+<section id="scr-home">
+  <div class="hero">
+    <h1>Todas as candidaturas de 2026. As mulheres em destaque.</h1>
+    <p class="tagline">Todas as candidaturas das Eleições 2026 em um só lugar, com montagem de colinha na ordem oficial da urna e um filtro para ver só as candidatas. Dados abertos do TSE. Iniciativa suprapartidária, sem fins lucrativos.</p>
+    <div class="ctas">
+      <button class="btn btn-confirma" id="cta-colinha">Montar minha colinha</button>
+      <button class="btn btn-ghost" id="cta-explorar">Explorar candidaturas</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Comece pela sua UF</h2>
+    <p class="sub">Toque no seu estado para ver as candidaturas e montar a colinha.</p>
+    <div class="card map-card">
+      <svg class="map-svg" viewBox="0 0 372 418" role="group" aria-label="Mapa do Brasil por unidade da federação" id="map"></svg>
+      <p class="map-note">Neste protótipo, apenas <strong>GO</strong> (e a Presidência, nacional) tem dados de exemplo. No site final, todas as 27 UFs estarão disponíveis.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="filter-row card" style="border-color:var(--accent-border)">
+      <button class="switch" id="filter-home" aria-pressed="false">
+        <span class="knob"></span> Ver só candidatas
+      </button>
+      <span class="filter-hint">O filtro usa o campo oficial de gênero do cadastro eleitoral do TSE e vale em todas as etapas. Fora do filtro, ninguém recebe marcação de gênero.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>As mulheres na disputa</h2>
+    <p class="sub">Números reais da base do TSE, extração de 13/09/2026.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="n mono">20.943</div><div class="l">candidaturas no Brasil</div></div>
+      <div class="stat"><div class="n mono" style="color:var(--accent)">7.343</div><div class="l">candidaturas femininas</div></div>
+      <div class="stat"><div class="n mono" style="color:var(--accent)">35,1%</div><div class="l">do total</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3 style="font-size:15.5px; font-family:'Archivo',sans-serif; font-weight:700">Participação feminina por cargo</h3>
+      <div class="chart" id="chart"></div>
+      <div class="chart-foot"><span class="ref-key"></span> piso legal de 30% por gênero nas eleições proporcionais</div>
+      <details class="tbl">
+        <summary>Ver como tabela</summary>
+        <table id="chart-table">
+          <thead><tr><th>Cargo</th><th class="num">Total</th><th class="num">Mulheres</th><th class="num">%</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </details>
+    </div>
+    <p class="sub" style="margin-top:10px">Leitura: as disputas proporcionais ficam no piso legal de 30%. Onde não há piso — Senado, governos, Presidência — a participação cai para 21,9%, 17,5% e 15,4%.</p>
+  </div>
+</section>
+
+<!-- ============ COLINHA ============ -->
+<section id="scr-colinha" hidden>
+  <div class="steps-bar" id="steps-bar"></div>
+
+  <div id="step-area"></div>
+</section>
+
+<!-- ============ METODOLOGIA ============ -->
+<section id="scr-met" hidden>
+  <div class="met">
+    <div class="hero" style="padding-block:30px 0">
+      <h1 style="font-size:clamp(26px,7vw,34px)">Metodologia</h1>
+      <p class="tagline">O que este site faz, o que ele não faz, e de onde vêm os dados.</p>
+    </div>
+
+    <h2>Fonte dos dados</h2>
+    <p>As candidaturas e as redes sociais declaradas vêm do <strong>Portal de Dados Abertos do TSE</strong>. Extração de referência: <strong>13/09/2026</strong>. A situação do registro (deferida, indeferida, sub judice) não consta nesta base e será incorporada via DivulgaCandContas. Até lá, há candidaturas sub judice entre as exibidas.</p>
+    <p><strong>Nesta demonstração, todas as candidaturas listadas são fictícias.</strong> Apenas os totais e percentuais da página inicial são reais.</p>
+
+    <h2>O filtro de candidatas</h2>
+    <blockquote>O filtro de candidatas deste site reproduz a classificação de gênero constante do cadastro eleitoral, que é a única informação disponível na base pública do TSE. Esse critério deixa de fora mulheres trans cujo registro civil não foi retificado. O projeto optou por não classificar manualmente a identidade de gênero de ninguém, porque qualquer classificação feita por terceiros a partir de nome civil, nome social ou imagem expõe a pessoa sem seu consentimento. Fora do filtro, todas as candidaturas aparecem sem marcação de gênero.</blockquote>
+    <ul>
+      <li>Não existe filtro "só homens".</li>
+      <li>Nenhuma inferência de gênero por nome, foto ou modelo, em nenhuma etapa.</li>
+      <li>Quando há nome social declarado, a ficha exibe apenas o nome de urna.</li>
+    </ul>
+
+    <h2>Busca por número</h2>
+    <p>O número de urna não é identificador único: na extração de 13/09 há 167 combinações de UF, cargo e número com mais de uma candidatura. Por isso a busca por número <strong>sempre devolve uma lista</strong>, e a colinha guarda a candidatura escolhida, não o número digitado.</p>
+
+    <h2>Redes sociais</h2>
+    <p>São os perfis que cada candidatura declarou à Justiça Eleitoral no registro (Lei 9.504/97 e Res. TSE 23.609/2019, art. 24, VIII), tratados em três degraus:</p>
+    <ul>
+      <li><strong>URL completa</strong> vira link, classificada pelo domínio;</li>
+      <li><strong>texto com plataforma nomeada</strong> vira link por regra conferida por amostra;</li>
+      <li><strong>o restante</strong> aparece como texto: "perfil declarado à Justiça Eleitoral, rede não informada".</li>
+    </ul>
+    <p>O projeto não verifica a autenticidade dos perfis.</p>
+
+    <h2>Privacidade</h2>
+    <ul>
+      <li>As escolhas da colinha ficam só na memória da página e somem ao recarregar.</li>
+      <li>Sem conta, sem analytics, sem intenção de voto em URL ou armazenamento local.</li>
+      <li>CPF, título eleitoral, e-mail e data de nascimento são descartados na ingestão e nunca são publicados; a verificação é automática antes de cada deploy.</li>
+    </ul>
+
+    <h2>Neutralidade</h2>
+    <p>Este site informa, não pede voto. A cobertura é completa — todas as candidaturas, de todos os partidos —, a ordenação padrão é neutra e declarada, e o recorte de mulheres é uma opção de quem usa. Projeto independente e suprapartidário, custeado pela idealizadora, sem doações e sem impulsionamento pago.</p>
+  </div>
+</section>
+
+<footer class="site">
+  <strong>Na Urna</strong> · Eleições Gerais 2026 · Dados abertos do TSE, extração de 13/09/2026.
+  A situação do registro não consta nesta base; há candidaturas sub judice.
+  Este site informa, não pede voto. Iniciativa suprapartidária, sem fins lucrativos.
+  <br>Protótipo de demonstração — as candidaturas exibidas são fictícias.
+</footer>
+
+</div><!-- /wrap -->
+
+<dialog class="ficha" id="ficha"></dialog>
+<div class="toast" id="toast" role="status"></div>
+<canvas id="cv" width="1000" height="1400" hidden></canvas>
+
+<script>
+"use strict";
+/* ============ dados fictícios de demonstração ============ */
+const PARTIES = ["PLX","PDM","UNI","RNV","PVT","MDX","AGO","FDE"]; // siglas fictícias
+const C = (nm,num,pt,g,redes)=>({nm,num,pt,g,redes:redes||[]});
+const R_URL=(plat,url)=>({t:"url",plat,url});
+const R_TXT_PLAT=(plat,raw,url)=>({t:"txtplat",plat,raw,url});
+const R_TXT=(raw)=>({t:"txt",raw});
+
+const DATA = {
+  pres: [
+    C("MARINA EXEMPLO","21","PLX","F",[R_URL("Instagram","https://instagram.com/exemplo.marina"),R_URL("YouTube","https://youtube.com/@exemplomarina")]),
+    C("CARLOS FICTÍCIO","33","PDM","M",[R_URL("Facebook","https://facebook.com/exemplo.carlos")]),
+    C("ANA DEMONSTRAÇÃO","45","UNI","F",[R_TXT_PLAT("TikTok","@ana.demo no TikTok","https://tiktok.com/@ana.demo")]),
+    C("JOÃO PROTÓTIPO","57","RNV","M",[]),
+    C("TEREZA AMOSTRA","62","PVT","F",[R_URL("X","https://x.com/tereza_amostra")]),
+    C("PEDRO ILUSTRATIVO","78","MDX","M",[R_TXT("CANAL OFICIAL DA CAMPANHA")]),
+  ],
+  gov: [
+    C("LÚCIA MODELO","21","PLX","F",[R_URL("Instagram","https://instagram.com/lucia.modelo.go"),R_TXT("PÁGINA DA CAMPANHA")]),
+    C("OTÁVIO EXEMPLO","33","PDM","M",[R_URL("Facebook","https://facebook.com/otavio.exemplo")]),
+    C("SANDRA AMOSTRA","45","UNI","F",[R_URL("Instagram","https://instagram.com/sandra.amostra")]),
+    C("BENTO PROTÓTIPO","57","RNV","M",[]),
+    C("IVAN ILUSTRATIVO","78","MDX","M",[R_TXT_PLAT("Kwai","perfil ivanilustrativo no Kwai","https://kwai.com/@ivanilustrativo")]),
+  ],
+  sen: [
+    C("HELENA EXEMPLO","210","PLX","F",[R_URL("Instagram","https://instagram.com/helena.exemplo"),R_URL("X","https://x.com/helenaexemplo")]),
+    C("MARCOS AMOSTRA","331","PDM","M",[R_URL("Facebook","https://facebook.com/marcos.amostra")]),
+    C("DIRCE MODELO","456","UNI","F",[R_TXT("PERFIL DA CANDIDATURA")]),
+    C("TALES PROTÓTIPO","570","RNV","M",[]),
+    C("NEUSA FICTÍCIA","622","PVT","F",[R_URL("Instagram","https://instagram.com/neusa.ficticia")]),
+    C("OSMAR ILUSTRATIVO","789","MDX","M",[R_TXT_PLAT("Threads","@osmar.ilustrativo no Threads","https://threads.net/@osmar.ilustrativo")]),
+    C("REGINA DEMONSTRAÇÃO","100","AGO","F",[R_URL("YouTube","https://youtube.com/@reginademo")]),
+    C("CÍCERO EXEMPLAR","900","FDE","M",[]),
+  ],
+  depfed: [
+    C("RENATA EXEMPLO","2345","PDM","F",[R_URL("Instagram","https://instagram.com/renata.exemplo"),R_TXT_PLAT("TikTok","@renata.exemplo no TikTok","https://tiktok.com/@renata.exemplo"),R_TXT("LISTA DE TRANSMISSÃO DA CAMPANHA")]),
+    C("RONALDO AMOSTRA","2345","PDM","M",[R_URL("Facebook","https://facebook.com/ronaldo.amostra")]),
+    C("CLARA MODELO","2110","PLX","F",[R_URL("Instagram","https://instagram.com/clara.modelo")]),
+    C("JONAS PROTÓTIPO","3312","PDM","M",[]),
+    C("SOFIA ILUSTRATIVA","4501","UNI","F",[R_URL("LinkedIn","https://linkedin.com/in/sofia-ilustrativa")]),
+    C("RUI DEMONSTRAÇÃO","5723","RNV","M",[R_TXT("CONTATO DA CAMPANHA")]),
+    C("TÂNIA FICTÍCIA","6240","PVT","F",[R_URL("Instagram","https://instagram.com/tania.ficticia")]),
+    C("PAULO EXEMPLAR","7801","MDX","M",[]),
+    C("BEATRIZ AMOSTRAL","1010","AGO","F",[R_URL("X","https://x.com/bia_amostral")]),
+    C("NELSON MODELAR","9099","FDE","M",[]),
+  ],
+  depest: [
+    C("MARTA EXEMPLO","21123","PLX","F",[R_URL("Instagram","https://instagram.com/marta.exemplo")]),
+    C("CAIO AMOSTRA","33211","PDM","M",[]),
+    C("LÍVIA MODELO","45045","UNI","F",[R_TXT_PLAT("TikTok","@livia.modelo no TikTok","https://tiktok.com/@livia.modelo")]),
+    C("ÉLCIO PROTÓTIPO","57890","RNV","M",[R_URL("Facebook","https://facebook.com/elcio.prototipo")]),
+    C("DORA ILUSTRATIVA","62222","PVT","F",[]),
+    C("FÁBIO DEMONSTRAÇÃO","78123","MDX","M",[R_TXT("PERFIL DECLARADO NO REGISTRO")]),
+    C("ROSA FICTÍCIA","10101","AGO","F",[R_URL("Instagram","https://instagram.com/rosa.ficticia")]),
+    C("HUGO EXEMPLAR","90909","FDE","M",[]),
+    C("CELINA AMOSTRAL","21456","PLX","F",[R_URL("YouTube","https://youtube.com/@celina.amostral")]),
+    C("DANTE MODELAR","33999","PDM","M",[]),
+    C("ÍRIS PROTOTIPAL","45777","UNI","F",[R_URL("Instagram","https://instagram.com/iris.prototipal")]),
+    C("SAULO ILUSTRE","62888","PVT","M",[]),
+  ],
+};
+// id estável por candidatura (a colinha guarda o id, nunca o número)
+Object.entries(DATA).forEach(([k,arr])=>arr.forEach((c,i)=>{c.id=k+"-"+i; c.key=k;}));
+
+const SLOTS = [
+  {key:"depfed", label:"Deputada ou deputado federal", short:"DEP. FEDERAL", digits:4, scope:"GO"},
+  {key:"depest", label:"Deputada ou deputado estadual", short:"DEP. ESTADUAL", digits:5, scope:"GO"},
+  {key:"sen1",  data:"sen", label:"Senado — primeira vaga", short:"SENADO 1ª VAGA", digits:3, scope:"GO"},
+  {key:"sen2",  data:"sen", label:"Senado — segunda vaga", short:"SENADO 2ª VAGA", digits:3, scope:"GO"},
+  {key:"gov",   label:"Governo do estado", short:"GOVERNO", digits:2, scope:"GO"},
+  {key:"pres",  label:"Presidência", short:"PRESIDÊNCIA", digits:2, scope:"BR"},
+];
+const CARGO_STATS = [
+  ["Vice-governador",208,87],["Vice-presidente",13,5],["Deputado federal",7793,2865],
+  ["Deputado distrital",432,152],["Deputado estadual",11277,3918],["2º suplente",344,106],
+  ["1º suplente",344,103],["Senador",319,70],["Governador",200,35],["Presidente",13,2],
+];
+const UF_GRID = [
+  ["RR",1,0],["AP",3,0],
+  ["AM",0,1],["PA",2,1],["MA",4,1],["CE",5,1],["RN",6,1],
+  ["AC",0,2],["RO",1,2],["TO",3,2],["PI",4,2],["PB",6,2],
+  ["MT",2,3],["BA",4,3],["PE",6,3],["AL",7,3],
+  ["GO",2,4],["DF",3,4],["MG",4,4],["ES",5,4],["SE",6,4],
+  ["MS",1,5],["SP",3,5],["RJ",4,5],
+  ["PR",2,6],["SC",2,7],["RS",1,8],
+];
+
+/* ============ estado (só em memória, nada persiste) ============ */
+const state = {
+  screen:"home",
+  uf:"GO",
+  step:0,          // 0..5 etapas, 6 = revisão
+  soCandidatas:false,
+  sel:{},          // slotKey -> candidato
+  query:"",
+};
+
+/* ============ utilitários ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600);
+}
+const initials=nm=>nm.split(/\s+/).slice(0,2).map(w=>w[0]).join("");
+const digitsHTML=n=>'<span>'+n.split("").join("</span><span>")+"</span>";
+
+/* ============ navegação ============ */
+function show(screen){
+  state.screen=screen;
+  ["home","colinha","met"].forEach(k=>{
+    document.getElementById("scr-"+k).hidden = k!==screen;
+    document.querySelector('[data-nav="'+k+'"]').setAttribute("aria-current", k===screen ? "true":"false");
+  });
+  if(screen==="colinha") renderStep();
+  window.scrollTo({top:0});
+}
+document.querySelectorAll("[data-nav]").forEach(b=>b.addEventListener("click",()=>show(b.dataset.nav)));
+$("#cta-colinha").addEventListener("click",()=>{state.step=0; state.query=""; show("colinha");});
+$("#cta-explorar").addEventListener("click",()=>{state.step=0; state.query=""; show("colinha"); toast("Cada etapa também serve para explorar — não é preciso escolher ninguém.");});
+
+/* ============ mapa ============ */
+(function buildMap(){
+  const svg=$("#map"), T=42, G=4;
+  UF_GRID.forEach(([uf,cx,cy])=>{
+    const x=cx*(T+G)+2, y=cy*(T+G)+2;
+    const g=document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("class","tile-g"+(uf==="GO"?" on":" dim"));
+    g.setAttribute("tabindex","0"); g.setAttribute("role","button");
+    g.setAttribute("aria-label", uf + (uf==="GO"?"":" — sem dados de exemplo no protótipo"));
+    g.innerHTML='<rect class="tile" x="'+x+'" y="'+y+'" width="'+T+'" height="'+T+'" rx="9"></rect>'+
+      '<text x="'+(x+T/2)+'" y="'+(y+T/2+5)+'" text-anchor="middle">'+uf+'</text>';
+    const pick=()=>{ if(uf==="GO"){state.uf="GO"; state.step=0; state.query=""; show("colinha");}
+      else toast(uf+" ainda não tem dados de exemplo neste protótipo — experimente GO."); };
+    g.addEventListener("click",pick);
+    g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();}});
+    svg.appendChild(g);
+  });
+})();
+
+/* ============ gráfico ============ */
+(function buildChart(){
+  const el=$("#chart"), tb=$("#chart-table tbody"), MAX=50; // escala 0–50%
+  CARGO_STATS.forEach(([cargo,total,f])=>{
+    const pct=f/total*100, pctBR=pct.toFixed(1).replace(".",",");
+    const row=document.createElement("div"); row.className="crow";
+    row.innerHTML='<div class="lbl">'+cargo+'</div>'+
+      '<div class="track" title="'+cargo+': '+f+' de '+total+' candidaturas ('+pctBR+'%)">'+
+        '<div class="bar" style="width:'+(pct/MAX*100)+'%"></div>'+
+        '<div class="refline" style="left:'+(30/MAX*100)+'%"></div>'+
+      '</div>'+
+      '<div class="val mono">'+pctBR+'%</div>';
+    el.appendChild(row);
+    const tr=document.createElement("tr");
+    tr.innerHTML="<td>"+cargo+'</td><td class="num mono">'+total.toLocaleString("pt-BR")+'</td><td class="num mono">'+f.toLocaleString("pt-BR")+'</td><td class="num mono">'+pctBR+"%</td>";
+    tb.appendChild(tr);
+  });
+})();
+
+/* ============ filtro ============ */
+function bindSwitch(btn){
+  btn.setAttribute("aria-pressed", state.soCandidatas?"true":"false");
+  btn.addEventListener("click",()=>{
+    state.soCandidatas=!state.soCandidatas;
+    document.querySelectorAll(".switch").forEach(s=>s.setAttribute("aria-pressed",state.soCandidatas?"true":"false"));
+    if(state.screen==="colinha") renderStep();
+  });
+}
+bindSwitch($("#filter-home"));
+
+/* ============ etapas da colinha ============ */
+function slotData(slot){ return DATA[slot.data||slot.key]; }
+
+function candidatesFor(slot){
+  let list=slotData(slot).slice();
+  // Senado: dois votos distintos — a 2ª vaga não repete a escolha da 1ª e vice-versa
+  if(slot.key==="sen2"&&state.sel.sen1) list=list.filter(c=>c.id!==state.sel.sen1.id);
+  if(slot.key==="sen1"&&state.sel.sen2) list=list.filter(c=>c.id!==state.sel.sen2.id);
+  if(state.soCandidatas) list=list.filter(c=>c.g==="F");
+  const q=state.query.trim();
+  if(q){
+    if(/^\d+$/.test(q)) list=list.filter(c=>c.num.startsWith(q));
+    else{
+      const nq=q.toLocaleUpperCase("pt-BR");
+      list=list.filter(c=>c.nm.includes(nq)||c.pt.includes(nq));
+    }
+  }
+  // ordem neutra e declarada: alfabética pelo nome de urna
+  return list.sort((a,b)=>a.nm.localeCompare(b.nm,"pt-BR"));
+}
+
+function renderStep(){
+  const area=$("#step-area"), bar=$("#steps-bar");
+  bar.innerHTML=SLOTS.map((s,i)=>'<div class="seg'+(state.sel[s.key]?" done":(i===state.step?" cur":""))+'"></div>').join("");
+  if(state.step>=6){ renderReview(); return; }
+
+  const slot=SLOTS[state.step];
+  const list=candidatesFor(slot);
+  const q=state.query.trim();
+  const dup=/^\d+$/.test(q)&&q.length>=slot.digits&&list.length>1&&list.every(c=>c.num===q);
+
+  area.innerHTML=
+    '<div class="step-head">'+
+      '<span class="k">Voto '+(state.step+1)+' de 6</span>'+
+      '<span class="uf-chip">'+(slot.scope==="BR"?"Nacional":"UF: "+state.uf)+'</span>'+
+      '<h2 style="flex-basis:100%">'+slot.label+'</h2>'+
+    '</div>'+
+    '<div class="filter-row" style="margin-top:12px">'+
+      '<button class="switch" id="sw-step" aria-pressed="'+state.soCandidatas+'"><span class="knob"></span> Ver só candidatas</button>'+
+    '</div>'+
+    '<div class="search"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'+
+      '<input id="q" inputmode="search" placeholder="Número ('+slot.digits+' dígitos) ou nome de urna" value="'+esc(state.query)+'" aria-label="Buscar candidatura por número ou nome"></div>'+
+    (dup?'<div class="dup-note"><strong>Este número aparece em mais de uma candidatura na base.</strong> A busca por número sempre devolve uma lista — escolha pelo nome. A colinha guarda a candidatura, não o número.</div>':"")+
+    '<div class="cand-list" id="cl">'+
+      (list.length?list.map(c=>{
+        const sel=state.sel[slot.key]&&state.sel[slot.key].id===c.id;
+        return '<button class="cand'+(sel?" sel":"")+'" data-id="'+c.id+'">'+
+          '<span class="avatar" aria-hidden="true">'+initials(c.nm)+'</span>'+
+          '<span><span class="nm">'+c.nm+'</span><br><span class="meta">'+c.pt+' · '+slot.short+(slot.scope==="BR"?"":" · "+state.uf)+'</span></span>'+
+          '<span class="digits" aria-label="número '+c.num+'">'+digitsHTML(c.num)+'</span>'+
+        '</button>';
+      }).join(""):'<p class="empty-msg">Nenhuma candidatura encontrada'+(state.soCandidatas?" com o filtro de candidatas ativo":"")+'.</p>')+
+    '</div>'+
+    '<div class="step-actions">'+
+      (state.step>0?'<button class="btn btn-ghost" id="b-prev">Voltar</button>':"")+
+      '<button class="btn btn-ghost" id="b-skip">'+(state.sel[slot.key]?"Avançar":"Deixar sem escolha")+'</button>'+
+      '<button class="link-btn" id="b-rev" style="margin-left:auto">Ir para a revisão →</button>'+
+    '</div>';
+
+  bindSwitch($("#sw-step"));
+  const qi=$("#q");
+  qi.addEventListener("input",()=>{state.query=qi.value; renderStep(); const q2=$("#q"); q2.focus(); q2.setSelectionRange(q2.value.length,q2.value.length);});
+  document.querySelectorAll("#cl .cand").forEach(b=>b.addEventListener("click",()=>{
+    openFicha(b.dataset.id, slot);
+  }));
+  const prev=$("#b-prev"); if(prev) prev.addEventListener("click",()=>{state.step--; state.query=""; renderStep();});
+  $("#b-skip").addEventListener("click",()=>{state.step++; state.query=""; renderStep(); window.scrollTo({top:0});});
+  $("#b-rev").addEventListener("click",()=>{state.step=6; renderStep(); window.scrollTo({top:0});});
+}
+
+/* ============ ficha ============ */
+function findCand(id){ for(const arr of Object.values(DATA)){ const c=arr.find(x=>x.id===id); if(c) return c; } }
+function slotOfDataKey(k){ return SLOTS.find(s=>(s.data||s.key)===k); }
+
+function openFicha(id, fromSlot){
+  const c=findCand(id);
+  const meta=slotOfDataKey(c.key);
+  const d=$("#ficha");
+  const redes=c.redes.length?c.redes.map(r=>{
+    if(r.t==="url") return '<div class="rede"><span class="plat">'+r.plat+'</span><a href="'+esc(r.url)+'" data-demo>'+esc(r.url.replace("https://",""))+'</a></div>';
+    if(r.t==="txtplat") return '<div class="rede"><span class="plat">'+r.plat+'</span><a href="'+esc(r.url)+'" data-demo>'+esc(r.raw)+'</a></div>';
+    return '<div class="rede"><span class="plat">texto</span><span class="plain">'+esc(r.raw)+' — perfil declarado à Justiça Eleitoral, rede não informada</span></div>';
+  }).join(""):'<div class="rede"><span class="plain">Nenhum perfil declarado na base do TSE.</span></div>';
+
+  d.innerHTML='<div class="ficha-in">'+
+    '<div class="ficha-top">'+
+      '<span class="avatar" aria-hidden="true">'+initials(c.nm)+'</span>'+
+      '<div><h3>'+c.nm+'</h3><div class="meta">'+meta.short+(meta.scope==="BR"?" · Brasil":" · "+state.uf)+' · '+c.pt+'</div></div>'+
+    '</div>'+
+    '<div class="ficha-num"><div class="cap">Número na urna</div><div class="digits">'+digitsHTML(c.num)+'</div></div>'+
+    '<div class="redes"><h4>Redes declaradas à Justiça Eleitoral</h4>'+redes+
+      '<p class="avulso">Canais informados no registro de candidatura. O projeto não verifica autenticidade.</p></div>'+
+    '<div class="ficha-actions">'+
+      (fromSlot?'<button class="btn btn-confirma" id="f-use">Usar na colinha</button>':"")+
+      '<button class="btn btn-ghost" id="f-close">Fechar</button>'+
+    '</div></div>';
+
+  d.querySelectorAll("[data-demo]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault(); toast("Link fictício — no site final abre o perfil declarado.");}));
+  const use=d.querySelector("#f-use");
+  if(use) use.addEventListener("click",()=>{
+    state.sel[fromSlot.key]=c; d.close();
+    state.query="";
+    if(state.step<6) state.step++;
+    renderStep(); window.scrollTo({top:0});
+  });
+  d.querySelector("#f-close").addEventListener("click",()=>d.close());
+  d.addEventListener("click",e=>{ if(e.target===d) d.close(); });
+  d.showModal();
+}
+
+/* ============ revisão + PNG ============ */
+function renderReview(){
+  const area=$("#step-area");
+  area.innerHTML=
+    '<div class="step-head"><span class="k">Revisão</span>'+
+      '<h2 style="flex-basis:100%">Sua colinha, na ordem da urna</h2></div>'+
+    '<p class="sub" style="color:var(--muted);font-size:14px;margin-top:6px">Nada disto é salvo: as escolhas ficam na memória da página e somem ao recarregar.</p>'+
+    '<div class="card" style="margin-top:12px">'+
+      SLOTS.map((s,i)=>{
+        const c=state.sel[s.key];
+        return '<div class="rev-item"><div><div class="c">'+(i+1)+'º voto · '+s.short+'</div>'+
+          (c?'<div class="n">'+c.nm+'</div><div class="p">'+c.pt+' · <span class="mono">'+c.num+'</span></div>'
+            :'<div class="n none">sem escolha</div>')+
+        '</div><button class="link-btn" data-edit="'+i+'">'+(c?"trocar":"escolher")+'</button></div>';
+      }).join("")+
+    '</div>'+
+    '<div class="step-actions">'+
+      '<button class="btn btn-confirma" id="b-png">Gerar imagem da colinha</button>'+
+      '<button class="btn btn-ghost" id="b-back">Voltar às etapas</button>'+
+    '</div>'+
+    '<div class="png-out" id="png-out"></div>';
+  area.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>{state.step=+b.dataset.edit; state.query=""; renderStep(); window.scrollTo({top:0});}));
+  $("#b-back").addEventListener("click",()=>{state.step=0; renderStep(); window.scrollTo({top:0});});
+  $("#b-png").addEventListener("click",drawPNG);
+}
+
+function drawPNG(){
+  const cv=$("#cv"), x=cv.getContext("2d");
+  const W=cv.width, H=cv.height;
+  // a imagem é sempre clara, como um papel de colinha
+  x.fillStyle="#F4F5F3"; x.fillRect(0,0,W,H);
+  x.fillStyle="#191C1F"; x.fillRect(0,0,W,120);
+  x.fillStyle="#FFFFFF"; x.font="700 52px Archivo, sans-serif";
+  x.fillText("NA URNA", 48, 78);
+  x.fillStyle="#9673D1"; x.fillRect(48+x.measureText("NA URNA").width+18,52,16,16);
+  x.fillStyle="#C8CDD2"; x.font="500 26px Archivo, sans-serif";
+  x.fillText("Colinha · Eleições Gerais 2026 · "+ (state.uf), 48, 108);
+
+  let y=190;
+  SLOTS.forEach((s,i)=>{
+    const c=state.sel[s.key];
+    x.fillStyle="#59616A"; x.font="700 24px Archivo, sans-serif";
+    x.fillText((i+1)+"º VOTO · "+s.short, 48, y);
+    if(c){
+      x.fillStyle="#191C1F"; x.font="700 40px Archivo, sans-serif";
+      x.fillText(c.nm, 48, y+48);
+      x.font="500 28px Archivo, sans-serif"; x.fillStyle="#59616A";
+      x.fillText(c.pt, 48, y+86);
+      // dígitos
+      const n=c.num; let dx=W-48-n.length*74;
+      x.font="600 44px 'IBM Plex Mono', monospace";
+      for(const ch of n){
+        x.fillStyle="#FFFFFF"; x.strokeStyle="#AEB6BC"; x.lineWidth=3;
+        roundRect(x,dx,y+18,64,76,10); x.fill(); x.stroke();
+        x.fillStyle="#191C1F"; x.fillText(ch, dx+18, y+72);
+        dx+=74;
+      }
+    }else{
+      x.fillStyle="#9AA3AB"; x.font="italic 500 32px Archivo, sans-serif";
+      x.fillText("sem escolha", 48, y+48);
+    }
+    y+=170;
+    if(i<5){ x.strokeStyle="#D3D8DC"; x.lineWidth=2; x.beginPath(); x.moveTo(48,y-46); x.lineTo(W-48,y-46); x.stroke(); }
+  });
+
+  x.fillStyle="#59616A"; x.font="500 22px Archivo, sans-serif";
+  x.fillText("Dados abertos do TSE · extração de 13/09/2026 · ordem oficial da urna", 48, H-84);
+  x.fillStyle="#C75A1E"; x.font="700 22px Archivo, sans-serif";
+  x.fillText("PROTÓTIPO — candidaturas fictícias de demonstração", 48, H-48);
+
+  const out=$("#png-out");
+  out.innerHTML='<img alt="Colinha gerada">'+
+    '<p class="png-hint">Imagem gerada no seu navegador, por Canvas — nada foi enviado a servidor nenhum. No site final, o botão baixa o PNG ou compartilha via Web Share.</p>';
+  out.querySelector("img").src=cv.toDataURL("image/png");
+  out.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function roundRect(x,px,py,w,h,r){
+  x.beginPath();
+  x.moveTo(px+r,py); x.arcTo(px+w,py,px+w,py+h,r); x.arcTo(px+w,py+h,px,py+h,r);
+  x.arcTo(px,py+h,px,py,r); x.arcTo(px,py,px+w,py,r); x.closePath();
+}
+</script>
